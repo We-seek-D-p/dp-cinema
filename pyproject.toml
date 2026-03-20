@@ -1,7 +1,7 @@
 [project]
 name = "dp-cinema"
 version = "0.1.0"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = []
 
 [tool.uv]
@@ -9,3 +9,21 @@ managed = true
 
 [tool.uv.workspace]
 members = ["apps/*", "libs/*"]
+
+[tool.ruff]
+src = ["apps", "libs"]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "S", "C90"]
+fixable = ["ALL"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.7",
+]
