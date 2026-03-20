@@ -1,0 +1,19 @@
+version = 1
+revision = 3
+requires-python = ">=3.12"
+
+[manifest]
+members = [
+    "django-service",
+    "dp-cinema",
+]
+
+[[package]]
+name = "django-service"
+version = "0.1.0"
+source = { virtual = "apps/django-service" }
+
+[[package]]
+name = "dp-cinema"
+version = "0.1.0"
+source = { virtual = "." }
