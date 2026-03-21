@@ -8,7 +8,7 @@ dependencies = []
 managed = true
 
 [tool.uv.workspace]
-members = ["apps/*", "libs/*"]
+members = ["apps/django_service", "libs/*"]
 
 [tool.ruff]
 src = ["apps", "libs"]
