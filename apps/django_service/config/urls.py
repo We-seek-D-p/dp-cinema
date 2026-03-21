@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from users.views import UserAccountController, UserProfileController, UserRecoveryController, UserLoginController
+from apps.django_service.users.views import UserAccountController, UserProfileController, UserRecoveryController, UserLoginController
 
 urlpatterns = [
     path('admin/', admin.site.urls),
