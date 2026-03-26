@@ -1,5 +1,5 @@
-from django.contrib import admin
-
+from django.contrib import admin, messages
+from django.utils.translation import ngettext
 from .models import Genre, Movie, Watchlist
 
 
@@ -18,6 +18,22 @@ class MovieAdmin(admin.ModelAdmin):
     search_fields = ("title", "description")
     autocomplete_fields = ("genres",)
     ordering = ("title",)
+    actions = ("publish_movies",)
+
+    @admin.action(description="Опубликовать")
+    def publish_movies(self, request, queryset):
+        updated = queryset.update(is_published=True)
+        self.message_user(
+            request,
+            ngettext(
+                "%d фильм опубликован.",
+                "%d фильмов опубликовано.",
+                updated,
+            )
+            % updated,
+            messages.SUCCESS,
+        )
+
 
 
 @admin.register(Watchlist)
