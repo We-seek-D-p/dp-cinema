@@ -52,8 +52,6 @@ class Watchlist(models.Model):
         related_name="watchlisted_by",
     )
     added_at = models.DateTimeField(auto_now_add=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
 
