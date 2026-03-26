@@ -22,12 +22,20 @@ from apps.django_service.users.views import (
     UserRecoveryController,
 )
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+
+api_v1_patterns = [
+    path("register/", UserAccountController.as_view(), name="register"),
+    path("login/", UserLoginController.as_view(), name="login"),
+    path("profile/<int:pk>/", UserProfileController.as_view(), name="profile"),
+    path("restore/", UserRecoveryController.as_view(), name="restore"),
+    path("", include(router.urls)),
+]
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("register/", UserAccountController.as_view()),
-    path("login/", UserLoginController.as_view()),
-    path("profile/<int:pk>/", UserProfileController.as_view()),
-    path("restore/", UserRecoveryController.as_view()),
+    path("api/v1/", include((api_v1_patterns, "api"), namespace="v1")),
 ]
