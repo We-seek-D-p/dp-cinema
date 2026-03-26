@@ -1,5 +1,4 @@
 """Serializers for the movies application."""
-from re import match
 
 from rest_framework import serializers
 from .models import Genre, Movie
@@ -32,7 +31,7 @@ class MovieDetailSerializer(serializers.ModelSerializer):
     genres = GenreSerializer(many=True, read_only=True)
 
     class Meta:
-        match = Movie
+        model = Movie
         fields = [
             'id', 'title', 'description', 'poster_url', 'hls_url',
             'release_date', 'is_published', 'is_premium', 'genres',
