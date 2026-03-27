@@ -21,11 +21,14 @@ from apps.django_service.users.views import (
     UserProfileController,
     UserRecoveryController,
 )
+from apps.django_service.movies.views import GenreViewSet, MovieViewSet
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
+router.register(r'genres', GenreViewSet, basename='genre')
+router.register(r'movies', MovieViewSet, basename='movie')
 
 api_v1_patterns = [
     path("register/", UserAccountController.as_view(), name="register"),
