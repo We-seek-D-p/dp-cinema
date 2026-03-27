@@ -19,8 +19,8 @@ class UserService:
         return self.repo.create(data)
 
     def authenticate_user(self, data: dict) -> dict | None:
-        username = data.get('username')
-        password = data.get('password')
+        username = data.get("username")
+        password = data.get("password")
 
         user = authenticate(username=username, password=password)
 
@@ -28,9 +28,9 @@ class UserService:
             # 2. Если всё ок — генерим пару токенов (бизнес-задача сервиса)
             refresh = RefreshToken.for_user(user)
             return {
-                'access': str(refresh.access_token),
-                'refresh': str(refresh),
-                'user': user
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": user,
             }
         return None
 

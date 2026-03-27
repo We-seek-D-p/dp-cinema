@@ -12,9 +12,8 @@ from .services import UserService
 
 
 class UserAccountController(APIView):
-
     def get_permissions(self):
-        if self.request.method == 'POST':
+        if self.request.method == "POST":
             return [AllowAny()]
         return [IsAuthenticated()]
 
@@ -22,7 +21,9 @@ class UserAccountController(APIView):
         serializer = UserCreateSerializer(data=request.data)
         if serializer.is_valid():
             user = UserService().register(serializer.validated_data)
-            return Response(UserPublicSerializer(user).data, status=status.HTTP_201_CREATED)
+            return Response(
+                UserPublicSerializer(user).data, status=status.HTTP_201_CREATED
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -37,13 +38,16 @@ class UserLoginController(APIView):
             result = service.authenticate_user(serializer.validated_data)
 
             if result:
-                return Response({
-                    "tokens": {
-                        "access": result['access'],
-                        "refresh": result['refresh']
+                return Response(
+                    {
+                        "tokens": {
+                            "access": result["access"],
+                            "refresh": result["refresh"],
+                        },
+                        "user": UserPublicSerializer(result["user"]).data,
                     },
-                    "user": UserPublicSerializer(result['user']).data
-                }, status=status.HTTP_200_OK)
+                    status=status.HTTP_200_OK,
+                )
 
             return Response({"detail": "Неверный логин или пароль"}, status=401)
 
@@ -79,8 +83,10 @@ class UserRecoveryController(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        email = request.data.get('email')
+        email = request.data.get("email")
         user = UserService().recover_account(email)
         if user:
             return Response(UserPublicSerializer(user).data)
-        return Response({"detail": "Active user not found or nothing to recover"}, status=404)
+        return Response(
+            {"detail": "Active user not found or nothing to recover"}, status=404
+        )

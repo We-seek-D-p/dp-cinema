@@ -1,5 +1,6 @@
 from django.contrib import admin, messages
 from django.utils.translation import ngettext
+
 from .models import Genre, Movie, Watchlist
 
 
@@ -33,7 +34,6 @@ class MovieAdmin(admin.ModelAdmin):
             % updated,
             messages.SUCCESS,
         )
-
 
 
 @admin.register(Watchlist)

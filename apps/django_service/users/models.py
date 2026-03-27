@@ -21,4 +21,4 @@ class User(AbstractUser):
     all_with_deleted = models.Manager()
 
     class Meta:
-        db_table = 'users'
+        db_table = "users"

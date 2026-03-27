@@ -17,6 +17,7 @@ members = ["apps/django_service", "libs/*"]
 src = ["apps", "libs"]
 line-length = 88
 target-version = "py313"
+exclude = ["**/migrations/*.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "S", "C90"]
