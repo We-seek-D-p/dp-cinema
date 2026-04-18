@@ -3,6 +3,7 @@ name = "dp-cinema"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
+    "django-filter>=25.2",
     "djangorestframework-stubs>=3.16.8",
     "python-dotenv>=1.2.2",
 ]

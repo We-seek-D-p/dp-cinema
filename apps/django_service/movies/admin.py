@@ -13,8 +13,8 @@ class GenreAdmin(admin.ModelAdmin):
 
 @admin.register(Movie)
 class MovieAdmin(admin.ModelAdmin):
-    list_display = ("title", "is_published", "is_premium", "release_date")
-    list_filter = ("is_published", "is_premium", "genres")
+    list_display = ("title", "is_published", "is_premium", "release_date", "deleted_at")
+    list_filter = ("is_published", "is_premium", "genres", "deleted_at")
     list_editable = ("is_published",)
     search_fields = ("title", "description")
     autocomplete_fields = ("genres",)
@@ -38,6 +38,6 @@ class MovieAdmin(admin.ModelAdmin):
 
 @admin.register(Watchlist)
 class WatchlistAdmin(admin.ModelAdmin):
-    list_display = ("user", "movie", "added_at")
-    list_filter = ("added_at", "user")
+    list_display = ("user", "movie", "added_at", "deleted_at")
+    list_filter = ("added_at", "user", "deleted_at")
     search_fields = ("user__username", "movie__title")
