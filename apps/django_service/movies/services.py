@@ -2,8 +2,8 @@ from django.db.models import QuerySet
 from .errors import MovieNotFoundError, AlreadyInWatchlistError, PremiumContentRestrictedError, \
     WatchlistItemNotFoundError
 from .models import Watchlist
-from movies.repositories import WatchListRepository, MovieRepository
-from users.models import User
+from .repositories import WatchListRepository, MovieRepository
+from apps.django_service.users.models import User
 
 
 class WatchListService:

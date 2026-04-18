@@ -15,13 +15,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from apps.django_service.movies.views import GenreViewSet, MovieViewSet
 from apps.django_service.users.views import (
     UserAccountController,
     UserLoginController,
     UserProfileController,
     UserRecoveryController,
 )
+from apps.django_service.movies.views import (
+    GenreViewSet,
+    MovieViewSet,
+    WatchListController
+)
+
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
@@ -35,6 +40,8 @@ api_v1_patterns = [
     path("login/", UserLoginController.as_view(), name="login"),
     path("profile/<int:pk>/", UserProfileController.as_view(), name="profile"),
     path("restore/", UserRecoveryController.as_view(), name="restore"),
+    path("watchlist/", WatchListController.as_view(), name="watchlist-list"),
+    path("watchlist/<int:movie_id>/", WatchListController.as_view(), name="watchlist-delete"),
     path("", include(router.urls)),
 ]
 

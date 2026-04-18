@@ -1,7 +1,7 @@
 from django.utils import timezone
 from django.db.models import QuerySet
 from .models import Movie, Watchlist
-from users.models import User
+from apps.django_service.users.models import User
 
 
 class MovieRepository:
