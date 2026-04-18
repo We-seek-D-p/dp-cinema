@@ -135,6 +135,7 @@ name = "dp-cinema"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "django-filter" },
     { name = "djangorestframework-stubs" },
     { name = "python-dotenv" },
 ]
@@ -146,6 +147,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "django-filter", specifier = ">=25.2" },
     { name = "djangorestframework-stubs", specifier = ">=3.16.8" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
 ]
