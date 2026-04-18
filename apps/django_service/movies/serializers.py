@@ -3,21 +3,18 @@ from rest_framework import serializers
 from .models import Genre, Movie, Watchlist
 
 
+class WatchlistCreateSerializer(serializers.Serializer):
+    movie_id = serializers.IntegerField(required=True)
+
+
 class WatchlistSerializer(serializers.ModelSerializer):
     movie_title = serializers.ReadOnlyField(source="movie.title")
+    movie_poster = serializers.ReadOnlyField(source="movie.poster_url")
 
     class Meta:
         model = Watchlist
-        fields = ["id", "movie", "movie_title", "added_at"]
-
-    def validate(self, data):
-        user = self.context["request"].user
-        movie = data.get("movie")
-
-        if Watchlist.objects.filter(user=user, movie=movie).exists():
-            raise serializers.ValidationError("Фильм уже был добавлен.")
-
-        return data
+        fields = ["id", "movie", "movie_title", "movie_poster", "added_at"]
+        read_only_fields = fields
 
 
 class GenreSerializer(serializers.ModelSerializer):
