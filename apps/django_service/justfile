@@ -1,0 +1,50 @@
+set dotenv-load := true
+set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
+
+# List recipes
+[private]
+[default]
+default:
+    @just --list --unsorted
+
+# Install service dependencies
+install:
+    uv sync
+
+# Fix Python issues
+fix:
+    uv run ruff check . --fix
+
+# Format Python code
+fmt:
+    uv run ruff format .
+
+# Check Python format
+fmt-check:
+    uv run ruff format . --check
+
+# Lint Python code
+lint:
+    uv run ruff check .
+
+# Run Django tests
+test:
+    uv run python manage.py test
+
+# Check Python code
+check: fmt-check lint test
+
+# Run all Python tasks
+all: fix fmt lint test
+
+# Run local server
+run:
+    uv run python manage.py runserver
+
+# Apply DB migrations
+migrate:
+    uv run python manage.py migrate
+
+# Create superuser
+createsuperuser:
+    uv run python manage.py createsuperuser
