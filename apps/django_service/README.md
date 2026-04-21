@@ -1,23 +1,23 @@
 # Django Service
 
-Все команды запускаются через пакет `django_service`.
+Проект открыт в `apps/django_service`, все команды ниже выполняются из этой директории.
 
 ## Подготовка окружения
 
 ```shell
 uv sync
-docker compose up --build
-uv run --package django_service python apps/django_service/manage.py migrate
+docker compose -f ../../docker-compose.yaml up --build
+uv run python manage.py migrate
 ```
 
 ## Запуск
 
 ```shell
-uv run --package django_service python apps/django_service/manage.py runserver
+uv run python manage.py runserver
 ```
 
 Админка: `http://localhost:8000/admin/`. Создать суперпользователя:
 
 ```shell
-uv run --package django_service python apps/django_service/manage.py createsuperuser
+uv run python manage.py createsuperuser
 ```

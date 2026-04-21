@@ -1,0 +1,13 @@
+src = ["apps", "libs"]
+line-length = 88
+target-version = "py313"
+force-exclude = true
+extend-exclude = ["**/migrations/*.py"]
+
+[lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "S", "C90"]
+fixable = ["ALL"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
