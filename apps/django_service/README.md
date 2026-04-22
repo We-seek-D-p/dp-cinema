@@ -34,3 +34,15 @@ just run
 ```shell
 uv run python manage.py createsuperuser
 ```
+
+## Запуск тестов
+
+```shell
+uv run python manage.py test
+```
+
+Через `just`:
+
+```shell
+just test
+```
