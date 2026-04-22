@@ -19,12 +19,15 @@ class UserAccountController(APIView):
 
     def post(self, request):
         serializer = UserCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            user = UserService().register(serializer.validated_data)
-            return Response(
-                UserPublicSerializer(user).data, status=status.HTTP_201_CREATED
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+
+        service = UserService()
+        user = service.register(serializer.validated_data)
+
+        return Response(
+            UserPublicSerializer(user).data,
+            status=status.HTTP_201_CREATED
+        )
 
 
 class UserLoginController(APIView):
@@ -32,51 +35,40 @@ class UserLoginController(APIView):
 
     def post(self, request):
         serializer = UserLoginRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        if serializer.is_valid():
-            service = UserService()
-            result = service.authenticate_user(serializer.validated_data)
+        service = UserService()
+        result = service.authenticate_user(serializer.validated_data)
 
-            if result:
-                return Response(
-                    {
-                        "tokens": {
-                            "access": result["access"],
-                            "refresh": result["refresh"],
-                        },
-                        "user": UserPublicSerializer(result["user"]).data,
-                    },
-                    status=status.HTTP_200_OK,
-                )
-
-            return Response({"detail": "Неверный логин или пароль"}, status=401)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {
+                "tokens": {
+                    "access": result["access"],
+                    "refresh": result["refresh"],
+                },
+                "user": UserPublicSerializer(result["user"]).data,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class UserProfileController(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        user = UserService().get_profile(pk)
-        if not user:
-            return Response({"detail": "User not found or deactivated"}, status=404)
+        service = UserService()
+        user = service.get_profile(pk)
         return Response(UserPublicSerializer(user).data)
 
     def patch(self, request, pk):
-        if str(request.user.id) != str(pk):
-            return Response({"detail": "Permission denied"}, status=403)
-
-        user = UserService().update_profile(pk, request.data)
+        service = UserService()
+        user = service.update_profile(pk, request.data, request.user)
         return Response(UserPublicSerializer(user).data)
 
     def delete(self, request, pk):
-        if str(request.user.id) != str(pk):
-            return Response({"detail": "Permission denied"}, status=403)
-
-        if UserService().deactivate_account(pk):
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=404)
+        service = UserService()
+        service.deactivate_account(pk, request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserRecoveryController(APIView):
@@ -84,9 +76,11 @@ class UserRecoveryController(APIView):
 
     def post(self, request):
         email = request.data.get("email")
-        user = UserService().recover_account(email)
-        if user:
-            return Response(UserPublicSerializer(user).data)
-        return Response(
-            {"detail": "Active user not found or nothing to recover"}, status=404
-        )
+        if not email:
+            return Response(
+                {"detail": "Email is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        service = UserService()
+        user = service.recover_account(email)
+        return Response(UserPublicSerializer(user).data)
