@@ -1,8 +1,4 @@
-class DomainError(Exception):
-    def __init__(self, message: str, code: str = None):
-        self.message = message
-        self.code = code or self.__class__.__name__
-        super().__init__(message)
+from apps.django_service.common.errors import DomainError
 
 
 class MovieNotFoundError(DomainError):
