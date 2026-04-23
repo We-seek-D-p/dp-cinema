@@ -39,21 +39,10 @@ class WatchlistServiceTests(TestCase):
             password="password!123",
             is_premium=False
         )
-        self.premium_user = User.objects.create_user(
-            username="premium_user",
-            email="premium@test.com",
-            password="password@123",
-            is_premium=True
-        )
         self.movie = Movie.objects.create(
             title="Basic movie",
             is_published=True,
             is_premium=False
-        )
-        self.premium_movie = Movie.objects.create(
-            title="Premium movie",
-            is_published=True, 
-            is_premium=True
         )
         self.service = WatchListService()
 
@@ -87,8 +76,33 @@ class WatchlistServiceTests(TestCase):
         with self.assertRaises(WatchlistItemNotFoundError):
             self.service.remove_from_watchlist(self.user, self.movie.id)
 
+
+class PremiumTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username="test_user",
+            email="test@test.com",
+            password="password!123",
+            is_premium=False
+        )
+        self.premium_user = User.objects.create_user(
+            username="premium_user",
+            email="premium@test.com",
+            password="password@123",
+            is_premium=True
+        )
+        self.premium_movie = Movie.objects.create(
+            title="Premium movie",
+            is_published=True, 
+            is_premium=True
+        )
+        self.service = WatchListService()
+
     def test_premium_access(self):
         item = self.service.add_to_watchlist(self.premium_user, self.premium_movie.id)
         self.assertEqual(item.movie, self.premium_movie)
+
+    def test_premium_error(self):
         with self.assertRaises(PremiumContentRestrictedError):
             self.service.add_to_watchlist(self.user, self.premium_movie.id)
