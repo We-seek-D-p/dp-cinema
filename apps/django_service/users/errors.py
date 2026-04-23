@@ -2,25 +2,31 @@ from apps.django_service.common.errors import DomainError
 
 
 class UserNotFoundError(DomainError):
-    def __init__(self, message='User not found'):
-        super().__init__(message)
+    default_code = 'user_not_found'
+    default_message = 'User does not exist'
+    http_status_code = 404
 
 class UserAlreadyExistsError(DomainError):
-    def __init__(self, message='User with this email or username already exists'):
-        super().__init__(message)
+    default_code = 'user_already_exists'
+    default_message = 'User already exists'
+    http_status_code = 409
 
 class InvalidCredentialsError(DomainError):
-    def __init__(self, message='Invalid username or password'):
-        super().__init__(message)
+    default_code = 'invalid_credentials'
+    default_message = 'Invalid credentials'
+    http_status_code = 401
 
 class UserDeactivatedError(DomainError):
-    def __init__(self, message='User account is deactivated'):
-        super().__init__(message)
+    default_code = 'user_deactivated'
+    default_message = 'User account is deactivated'
+    http_status_code = 403
 
 class PermissionDeniedError(DomainError):
-    def __init__(self, message='You don`t have permission to perform this action'):
-        super().__init__(message)
+    default_code = 'permission_denied'
+    default_message = ('Permission denied')
+    http_status_code = 403
 
 class UserRecoveryError(DomainError):
-    def __init__(self, message='Cannot recover account: user not found or already active'):
-        super().__init__(message)
+    default_code = 'user_recovery'
+    default_message = 'User recovery failed'
+    http_status_code = 404
