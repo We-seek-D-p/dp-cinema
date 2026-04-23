@@ -31,3 +31,13 @@ class UserRecoveryError(DomainError):
     default_code = 'user_recovery'
     default_message = 'User recovery failed'
     http_status_code = status.HTTP_404_NOT_FOUND
+
+class EmailRequiredError(DomainError):
+    default_code = 'email_required'
+    default_message = 'Email is required'
+    http_status_code = status.HTTP_400_BAD_REQUEST
+
+class UsernameRequiredError(DomainError):
+    default_code = 'username_required'
+    default_message = 'Username is required'
+    http_status_code = status.HTTP_400_BAD_REQUEST
