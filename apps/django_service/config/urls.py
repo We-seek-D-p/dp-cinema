@@ -24,7 +24,7 @@ from apps.django_service.users.views import (
 from apps.django_service.movies.views import (
     GenreViewSet,
     MovieViewSet,
-    WatchListController
+    WatchListController,
 )
 
 from django.contrib import admin
@@ -41,7 +41,11 @@ api_v1_patterns = [
     path("profile/<int:pk>/", UserProfileController.as_view(), name="profile"),
     path("restore/", UserRecoveryController.as_view(), name="restore"),
     path("watchlist/", WatchListController.as_view(), name="watchlist-list"),
-    path("watchlist/<int:movie_id>/", WatchListController.as_view(), name="watchlist-delete"),
+    path(
+        "watchlist/<int:movie_id>/",
+        WatchListController.as_view(),
+        name="watchlist-delete",
+    ),
     path("", include(router.urls)),
 ]
 

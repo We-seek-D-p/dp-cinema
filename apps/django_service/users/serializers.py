@@ -21,3 +21,13 @@ class UserPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username", "email", "avatar_url", "birth_date", "is_premium"]
+
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["username", "email", "avatar_url", "birth_date"]
+
+
+class UserRecoveryRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)

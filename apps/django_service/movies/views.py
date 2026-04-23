@@ -10,13 +10,14 @@ from .repositories import MovieRepository
 from .services import WatchListService
 from .serializers import (
     WatchlistSerializer,
-    WatchlistCreateSerializer, GenreSerializer,
+    WatchlistCreateSerializer,
+    GenreSerializer,
 )
 
 
 class WatchlistPagination(PageNumberPagination):
     page_size = 10
-    page_size_query_param = 'page_size'
+    page_size_query_param = "page_size"
     max_page_size = 50
 
 
@@ -39,7 +40,9 @@ class WatchListController(APIView):
         serializer = WatchlistCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        watchlist = self.service.add_to_watchlist(request.user, serializer.validated_data["movie_id"])
+        watchlist = self.service.add_to_watchlist(
+            request.user, serializer.validated_data["movie_id"]
+        )
         response_serializer = WatchlistSerializer(watchlist)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
