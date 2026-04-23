@@ -31,8 +31,8 @@ class UserService:
         return self.repo.get_by_email(email)
 
     def register(self, data: dict) -> User:
-        email = data.get('email')
-        username = data.get('username')
+        email = data.get("email")
+        username = data.get("username")
 
         if not email:
             raise EmailRequiredError()
@@ -40,9 +40,9 @@ class UserService:
             raise UsernameRequiredError()
 
         if self.repo.get_by_email(email):
-            raise UserAlreadyExistsError('User with this email already exists')
+            raise UserAlreadyExistsError("User with this email already exists")
         if self.repo.get_by_username(username):
-            raise UserAlreadyExistsError('User with this username already exists')
+            raise UserAlreadyExistsError("User with this username already exists")
 
         return self.repo.create(data)
 

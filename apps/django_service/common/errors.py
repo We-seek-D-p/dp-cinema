@@ -14,5 +14,5 @@ class DomainError(Exception):
         super().__init__(self.message)
 
     def to_response(self):
-        data = {'error': {'code': self.code, 'message': self.message}}
+        data = {"error": {"code": self.code, "message": self.message}}
         return Response(data, status=self.http_status_code)

@@ -7,7 +7,7 @@ from apps.django_service.movies.errors import (
     MovieNotFoundError,
     AlreadyInWatchlistError,
     WatchlistItemNotFoundError,
-    PremiumContentRestrictedError
+    PremiumContentRestrictedError,
 )
 
 
@@ -15,16 +15,14 @@ class MovieTests(TestCase):
     def setUp(self):
         self.genre = Genre.objects.create(name="Comedy", slug="comedy")
         self.movie = Movie.objects.create(
-            title="Valid film",
-            description="Valid description.",
-            is_published=True
+            title="Valid film", description="Valid description.", is_published=True
         )
         self.movie.genres.add(self.genre)
 
     def test_movie_values(self):
         self.assertEqual(str(self.movie), self.movie.title, "Valid film")
         self.assertEqual(self.movie.genres.first().name, "Comedy")
-    
+
     def test_genre_unique(self):
         with self.assertRaises(IntegrityError):
             Genre.objects.create(name="other", slug="comedy")
@@ -37,23 +35,19 @@ class WatchlistServiceTests(TestCase):
             username="test_user",
             email="test@test.com",
             password="password!123",
-            is_premium=False
+            is_premium=False,
         )
         self.premium_user = User.objects.create_user(
             username="premium_user",
             email="premium@test.com",
             password="password@123",
-            is_premium=True
+            is_premium=True,
         )
         self.movie = Movie.objects.create(
-            title="Basic movie",
-            is_published=True,
-            is_premium=False
+            title="Basic movie", is_published=True, is_premium=False
         )
         self.premium_movie = Movie.objects.create(
-            title="Premium movie",
-            is_published=True, 
-            is_premium=True
+            title="Premium movie", is_published=True, is_premium=True
         )
         self.service = WatchListService()
 
@@ -63,7 +57,7 @@ class WatchlistServiceTests(TestCase):
         self.assertIsInstance(added, Watchlist)
         self.assertIsNone(item.deleted_at)
         self.assertEqual(self.user.watchlist_items.count(), 1)
-    
+
     def test_watchlist_remove(self):
         self.service.add_to_watchlist(self.user, self.movie.id)
         self.service.remove_from_watchlist(self.user, self.movie.id)
@@ -76,7 +70,7 @@ class WatchlistServiceTests(TestCase):
         self.service.add_to_watchlist(self.user, self.movie.id)
         with self.assertRaises(AlreadyInWatchlistError):
             self.service.add_to_watchlist(self.user, self.movie.id)
-    
+
     def test_movie_not_found(self):
         invalid_ids = (999999, -1)
         for id in invalid_ids:

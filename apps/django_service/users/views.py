@@ -26,10 +26,7 @@ class UserAccountController(APIView):
         service = UserService()
         user = service.register(serializer.validated_data)
 
-        return Response(
-            UserPublicSerializer(user).data,
-            status=status.HTTP_201_CREATED
-        )
+        return Response(UserPublicSerializer(user).data, status=status.HTTP_201_CREATED)
 
 
 class UserLoginController(APIView):
@@ -84,5 +81,5 @@ class UserRecoveryController(APIView):
         serializer.is_valid(raise_exception=True)
 
         service = UserService()
-        user = service.recover_account(serializer.validated_data['email'])
+        user = service.recover_account(serializer.validated_data["email"])
         return Response(UserPublicSerializer(user).data)
