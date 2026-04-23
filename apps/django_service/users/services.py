@@ -18,7 +18,7 @@ class UserService:
         self.repo = UserRepository()
 
     def get_profile(self, user_id: int) -> User:
-        user = self.repo.get_by_id(user_id)
+        user = self.repo.get_any_by_id(user_id)
         if not user:
             raise UserNotFoundError()
         if user.deleted_at:
@@ -51,6 +51,9 @@ class UserService:
         user = authenticate(username=username, password=password)
 
         if not user:
+            user_any = self.repo.get_any_by_username(username)
+            if user_any and user_any.deleted_at:
+                raise UserDeactivatedError()
             raise InvalidCredentialsError()
         if user.deleted_at or not user.is_active:
             raise UserDeactivatedError()
