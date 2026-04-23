@@ -21,3 +21,17 @@ class UserPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username", "email", "avatar_url", "birth_date", "is_premium"]
+
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['avatar_url', 'birth_date']
+        extra_kwargs = {
+            'avatar_url': {'required': False, 'allow_null': True},
+            'birth_date': {'required': False, 'allow_null': True},
+        }
+
+
+class UserRecoveryRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
