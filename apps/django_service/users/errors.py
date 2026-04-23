@@ -1,32 +1,33 @@
 from apps.django_service.common.errors import DomainError
+from rest_framework import status
 
 
 class UserNotFoundError(DomainError):
     default_code = 'user_not_found'
     default_message = 'User does not exist'
-    http_status_code = 404
+    http_status_code = status.HTTP_404_NOT_FOUND
 
 class UserAlreadyExistsError(DomainError):
     default_code = 'user_already_exists'
     default_message = 'User already exists'
-    http_status_code = 409
+    http_status_code = status.HTTP_409_CONFLICT
 
 class InvalidCredentialsError(DomainError):
     default_code = 'invalid_credentials'
     default_message = 'Invalid credentials'
-    http_status_code = 401
+    http_status_code = status.HTTP_401_UNAUTHORIZED
 
 class UserDeactivatedError(DomainError):
     default_code = 'user_deactivated'
     default_message = 'User account is deactivated'
-    http_status_code = 403
+    http_status_code = status.HTTP_403_FORBIDDEN
 
 class PermissionDeniedError(DomainError):
     default_code = 'permission_denied'
     default_message = ('Permission denied')
-    http_status_code = 403
+    http_status_code = status.HTTP_403_FORBIDDEN
 
 class UserRecoveryError(DomainError):
     default_code = 'user_recovery'
     default_message = 'User recovery failed'
-    http_status_code = 404
+    http_status_code = status.HTTP_404_NOT_FOUND
