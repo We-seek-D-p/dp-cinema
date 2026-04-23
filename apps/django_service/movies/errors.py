@@ -1,21 +1,26 @@
 from apps.django_service.common.errors import DomainError
+from rest_framework import status
 
 
 class MovieNotFoundError(DomainError):
-    def __init__(self, message="Movie not found"):
-        super().__init__(message)
+    default_code = 'movie_not_found'
+    default_message = 'Movie not found'
+    http_status_code = status.HTTP_404_NOT_FOUND
 
 
 class AlreadyInWatchlistError(DomainError):
-    def __init__(self, message="Movie already in list"):
-        super().__init__(message)
+    default_code = 'already_in_watchlist'
+    default_message = 'Movie already in watchlist'
+    http_status_code = status.HTTP_400_BAD_REQUEST
 
 
 class WatchlistItemNotFoundError(DomainError):
-    def __init__(self, message="Watchlist's item not found "):
-        super().__init__(message)
+    default_code = 'watchlist_item_not_found'
+    default_message = 'Watchlist item not found'
+    http_status_code = status.HTTP_404_NOT_FOUND
 
 
 class PremiumContentRestrictedError(DomainError):
-    def __init__(self, message="This movie requires a premium subscription"):
-        super().__init__(message)
+    default_code = 'premium_content_restricted'
+    default_message = 'Premium content restricted'
+    http_status_code = status.HTTP_403_FORBIDDEN
