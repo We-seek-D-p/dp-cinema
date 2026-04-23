@@ -33,6 +33,12 @@ class UserRepository:
     def get_any_by_email(self, email: str) -> User:
         return User.all_with_deleted.filter(email=email).first()
 
+    def get_any_by_id(self, user_id: int) -> User:
+        return User.all_with_deleted.filter(id=user_id).first()
+
+    def get_any_by_username(self, username: str) -> User:
+        return User.all_with_deleted.filter(username=username).first()
+
     def restore(self, user: User) -> User:
         user.deleted_at = None
         user.is_active = True
