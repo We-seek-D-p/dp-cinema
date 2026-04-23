@@ -7,6 +7,8 @@ from .serializers import (
     UserCreateSerializer,
     UserLoginRequestSerializer,
     UserPublicSerializer,
+    UserProfileUpdateSerializer,
+    UserRecoveryRequestSerializer,
 )
 from .services import UserService
 
@@ -24,10 +26,7 @@ class UserAccountController(APIView):
         service = UserService()
         user = service.register(serializer.validated_data)
 
-        return Response(
-            UserPublicSerializer(user).data,
-            status=status.HTTP_201_CREATED
-        )
+        return Response(UserPublicSerializer(user).data, status=status.HTTP_201_CREATED)
 
 
 class UserLoginController(APIView):
@@ -61,8 +60,11 @@ class UserProfileController(APIView):
         return Response(UserPublicSerializer(user).data)
 
     def patch(self, request, pk):
+        serializer = UserProfileUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         service = UserService()
-        user = service.update_profile(pk, request.data, request.user)
+        user = service.update_profile(pk, serializer.validated_data, request.user)
         return Response(UserPublicSerializer(user).data)
 
     def delete(self, request, pk):
@@ -75,12 +77,9 @@ class UserRecoveryController(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        email = request.data.get("email")
-        if not email:
-            return Response(
-                {"detail": "Email is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        serializer = UserRecoveryRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         service = UserService()
-        user = service.recover_account(email)
+        user = service.recover_account(serializer.validated_data["email"])
         return Response(UserPublicSerializer(user).data)

@@ -10,6 +10,8 @@ from .errors import (
     UserDeactivatedError,
     PermissionDeniedError,
     UserRecoveryError,
+    EmailRequiredError,
+    UsernameRequiredError,
 )
 
 
@@ -29,18 +31,18 @@ class UserService:
         return self.repo.get_by_email(email)
 
     def register(self, data: dict) -> User:
-        email = data.get('email')
-        username = data.get('username')
+        email = data.get("email")
+        username = data.get("username")
 
         if not email:
-            raise ValueError('Email is required')
+            raise EmailRequiredError()
         if not username:
-            raise ValueError('Username is required')
+            raise UsernameRequiredError()
 
         if self.repo.get_by_email(email):
-            raise UserAlreadyExistsError('User with this email already exists')
+            raise UserAlreadyExistsError("User with this email already exists")
         if self.repo.get_by_username(username):
-            raise UserAlreadyExistsError('User with this username already exists')
+            raise UserAlreadyExistsError("User with this username already exists")
 
         return self.repo.create(data)
 
@@ -72,15 +74,17 @@ class UserService:
         user = self.get_profile(user_id)
         return self.repo.update(user, data)
 
-    def deactivate_account(self, user_id: int, request_user: User) -> bool:
+    def deactivate_account(self, user_id: int, request_user: User) -> None:
         if request_user.id != user_id:
             raise PermissionDeniedError()
 
         user = self.get_profile(user_id)
         self.repo.soft_delete(user)
-        return True
 
     def recover_account(self, email: str) -> User:
+        if not email:
+            raise EmailRequiredError()
+
         user = self.repo.get_any_by_email(email)
         if not user or not user.deleted_at:
             raise UserRecoveryError()
