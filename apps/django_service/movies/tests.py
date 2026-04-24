@@ -84,6 +84,12 @@ class WatchlistServiceTests(TestCase):
     def test_watchlist_not_found(self):
         with self.assertRaises(WatchlistItemNotFoundError):
             self.service.remove_from_watchlist(self.user, self.movie.id)
+    
+    def test_watchlist_remove_deleted(self):
+        self.service.add_to_watchlist(self.user, self.movie.id)
+        self.service.remove_from_watchlist(self.user, self.movie.id)
+        with self.assertRaises(WatchlistItemNotFoundError):
+            self.service.remove_from_watchlist(self.user, self.movie.id)
 
 
 class PremiumTests(TestCase):
@@ -115,6 +121,18 @@ class PremiumTests(TestCase):
     def test_premium_error(self):
         with self.assertRaises(PremiumContentRestrictedError):
             self.service.add_to_watchlist(self.user, self.premium_movie.id)
+    
+    def test_premium_upgrade(self):
+        self.user.is_premium = True
+        self.user.save()
+        item = self.service.add_to_watchlist(self.user, self.premium_movie.id)
+        self.assertEqual(item.movie, self.premium_movie)
+    
+    def test_premium_downgrade(self):
+        self.premium_user.is_premium = False
+        self.premium_user.save()
+        with self.assertRaises(PremiumContentRestrictedError):
+            self.service.add_to_watchlist(self.premium_user, self.premium_movie.id)
 
 
 class MovieApiSerializerSelectionTests(APITestCase):
