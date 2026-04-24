@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.test import TestCase
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 
@@ -99,18 +102,16 @@ class PremiumTests(TestCase):
             username="test_user",
             email="test@test.com",
             password="password!123",
-            is_premium=False
+            is_premium=False,
         )
         self.premium_user = User.objects.create_user(
             username="premium_user",
             email="premium@test.com",
             password="password@123",
-            is_premium=True
+            is_premium=True,
         )
         self.premium_movie = Movie.objects.create(
-            title="Premium movie",
-            is_published=True, 
-            is_premium=True
+            title="Premium movie", is_published=True, is_premium=True
         )
         self.service = WatchListService()
 
@@ -189,3 +190,178 @@ class MovieApiSerializerSelectionTests(APITestCase):
             set(response.data["genres"][0].keys()),
             {"id", "name", "slug"},
         )
+
+
+class MovieApiListBehaviorTests(APITestCase):
+    def setUp(self):
+        self.action = Genre.objects.create(name="Action", slug="action")
+        self.comedy = Genre.objects.create(name="Comedy", slug="comedy")
+
+        now = timezone.now()
+
+        for index in range(25):
+            movie = Movie.objects.create(
+                title=f"Movie {index:02d}",
+                description=f"Story line {index}",
+                release_date=now.date() - timedelta(days=index),
+                is_published=True,
+            )
+            movie.genres.add(self.action if index % 2 else self.comedy)
+            Movie.objects.filter(id=movie.id).update(
+                created_at=now - timedelta(hours=index)
+            )
+
+        self.title_match = Movie.objects.create(
+            title="Unique Alpha Title",
+            description="Generic description",
+            release_date=now.date(),
+            is_published=True,
+        )
+        self.title_match.genres.add(self.action)
+        Movie.objects.filter(id=self.title_match.id).update(
+            created_at=now + timedelta(minutes=1)
+        )
+
+        self.description_match = Movie.objects.create(
+            title="Regular title",
+            description="Hidden needle phrase",
+            release_date=now.date() - timedelta(days=60),
+            is_published=True,
+        )
+        self.description_match.genres.add(self.comedy)
+        Movie.objects.filter(id=self.description_match.id).update(
+            created_at=now + timedelta(minutes=2)
+        )
+
+        self.total_movies = Movie.objects.filter(
+            is_published=True,
+            deleted_at__isnull=True,
+        ).count()
+
+    def _movie_ids(self, response):
+        return [item["id"] for item in response.data["results"]]
+
+    def _published_movies(self):
+        return Movie.objects.filter(
+            is_published=True,
+            deleted_at__isnull=True,
+        )
+
+    def test_movies_list_default_pagination_shape(self):
+        response = self.client.get("/api/v1/movies/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("count", response.data)
+        self.assertIn("next", response.data)
+        self.assertIn("previous", response.data)
+        self.assertIn("results", response.data)
+
+        self.assertEqual(response.data["count"], self.total_movies)
+        self.assertEqual(len(response.data["results"]), 20)
+        self.assertIsNone(response.data["previous"])
+        self.assertIsNotNone(response.data["next"])
+
+    def test_movies_list_page_query_param(self):
+        response = self.client.get("/api/v1/movies/?page=2")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], self.total_movies)
+        self.assertIsNotNone(response.data["previous"])
+        self.assertIsNone(response.data["next"])
+        self.assertEqual(len(response.data["results"]), 7)
+
+    def test_movies_list_invalid_page_values(self):
+        for invalid_page in ["0", "abc", "9999"]:
+            response = self.client.get(f"/api/v1/movies/?page={invalid_page}")
+
+            self.assertEqual(response.status_code, 404)
+            self.assertIn("detail", response.data)
+
+    def test_movies_list_page_size_is_ignored(self):
+        for page_size in ["5", "999", "invalid"]:
+            response = self.client.get(f"/api/v1/movies/?page_size={page_size}")
+
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.data["results"]), 20)
+
+    def test_movies_list_filter_by_genre_slug(self):
+        response = self.client.get("/api/v1/movies/?genres__slug=action")
+
+        expected_ids = list(
+            self._published_movies()
+            .filter(genres__slug="action")
+            .order_by("title")
+            .values_list("id", flat=True)[:20]
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self._movie_ids(response), expected_ids)
+
+    def test_movies_list_filter_by_unknown_genre_slug_returns_empty_result(self):
+        response = self.client.get("/api/v1/movies/?genres__slug=missing")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 0)
+        self.assertEqual(response.data["results"], [])
+
+    def test_movies_list_search_by_title(self):
+        response = self.client.get("/api/v1/movies/?search=Unique%20Alpha")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(self._movie_ids(response), [self.title_match.id])
+
+    def test_movies_list_search_by_description(self):
+        response = self.client.get("/api/v1/movies/?search=needle")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(self._movie_ids(response), [self.description_match.id])
+
+    def test_movies_list_ordering_title(self):
+        response = self.client.get("/api/v1/movies/?ordering=title")
+
+        expected_ids = list(
+            self._published_movies()
+            .order_by("title")
+            .values_list("id", flat=True)[:20]
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self._movie_ids(response), expected_ids)
+
+    def test_movies_list_ordering_release_date(self):
+        response = self.client.get("/api/v1/movies/?ordering=release_date")
+
+        expected_ids = list(
+            self._published_movies()
+            .order_by("release_date")
+            .values_list("id", flat=True)[:20]
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self._movie_ids(response), expected_ids)
+
+    def test_movies_list_ordering_created_at(self):
+        response = self.client.get("/api/v1/movies/?ordering=created_at")
+
+        expected_ids = list(
+            self._published_movies()
+            .order_by("created_at")
+            .values_list("id", flat=True)[:20]
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self._movie_ids(response), expected_ids)
+
+    def test_movies_list_invalid_ordering_falls_back_to_default(self):
+        response = self.client.get("/api/v1/movies/?ordering=unknown_field")
+
+        expected_ids = list(
+            self._published_movies()
+            .order_by("title")
+            .values_list("id", flat=True)[:20]
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self._movie_ids(response), expected_ids)
