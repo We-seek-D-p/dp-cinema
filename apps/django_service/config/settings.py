@@ -11,22 +11,47 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
-import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-sys.path.append(str(BASE_DIR.parent.parent))
 
-load_dotenv(BASE_DIR / ".env")
+DJANGO_ENV = os.environ.get("DJANGO_ENV", "dev").strip().lower()
+
+IS_DEV = DJANGO_ENV == "dev"
+IS_PROD = DJANGO_ENV == "prod"
+
+BASE_ENV_FILE = BASE_DIR / ".env"
+PROFILE_ENV_FILE = BASE_DIR / f".env.{DJANGO_ENV}"
+
+if BASE_ENV_FILE.exists():
+    load_dotenv(BASE_ENV_FILE)
+
+if PROFILE_ENV_FILE.exists():
+    load_dotenv(PROFILE_ENV_FILE, override=True)
+
 
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
     "django-insecure-n2!h_$mqsuyp)yf&tqk3bja3$s^shvpnsce6@lef5g@kk!1nmh",
 )
-DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
+
+if IS_PROD and SECRET_KEY.startswith("django-insecure"):
+    raise RuntimeError("DJANGO_SECRET_KEY must be set in production")
+
+DEBUG = (
+    os.environ.get("DJANGO_DEBUG", "True" if IS_DEV else "False") == "True"
+)
+
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get(
+        "DJANGO_ALLOWED_HOSTS",
+        "*" if DEBUG else "",
+    ).split(",")
+    if host.strip()
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -119,9 +144,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "ru"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Moscow"
 
 USE_I18N = True
 
