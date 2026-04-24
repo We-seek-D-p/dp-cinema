@@ -1,7 +1,7 @@
 from rest_framework.views import exception_handler
 from rest_framework.response import Response
 
-from apps.django_service.common.errors import DomainError
+from common.errors import DomainError
 
 
 def custom_exception_handler(exc, context):

@@ -13,7 +13,7 @@ movies_router.register("", MovieViewSet, basename="movies")
 
 movie_urlpatterns = movies_router.urls
 
-watchlist_patterns = [
+watchlist_urlpatterns = [
     path("", WatchListController.as_view(), name="watchlist"),
-    path("<int:movie_id>", WatchListController.as_view(), name="watchlist-item"),
+    path("<int:movie_id>/", WatchListController.as_view(), name="watchlist-item"),
 ]

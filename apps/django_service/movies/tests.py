@@ -1,9 +1,9 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from apps.django_service.movies.models import Genre, Movie, Watchlist
-from apps.django_service.movies.services import WatchListService
+from movies.models import Genre, Movie, Watchlist
+from movies.services import WatchListService
 from django.db import IntegrityError
-from apps.django_service.movies.errors import (
+from movies.errors import (
     MovieNotFoundError,
     AlreadyInWatchlistError,
     WatchlistItemNotFoundError,

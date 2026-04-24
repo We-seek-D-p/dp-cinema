@@ -1,4 +1,4 @@
-from apps.django_service.common.errors import DomainError
+from common.errors import DomainError
 from rest_framework import status
 
 
