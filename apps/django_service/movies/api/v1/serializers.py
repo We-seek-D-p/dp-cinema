@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Genre, Movie, Watchlist
+from movies.models import Genre, Movie, Watchlist
 
 
 class WatchlistCreateSerializer(serializers.Serializer):
