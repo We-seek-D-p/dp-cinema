@@ -7,6 +7,8 @@ from rest_framework.views import APIView
 
 from movies.api.v1.serializers import (
     GenreSerializer,
+    MovieDetailSerializer,
+    MovieListSerializer,
     WatchlistCreateSerializer,
     WatchlistSerializer,
 )
@@ -73,3 +75,10 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return self.movie_repo.get_published()
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return MovieListSerializer
+        if self.action == "retrieve":
+            return MovieDetailSerializer
+        return MovieDetailSerializer

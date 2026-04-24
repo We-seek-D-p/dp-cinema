@@ -1,5 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from rest_framework.test import APITestCase
+
 from movies.models import Genre, Movie, Watchlist
 from movies.services import WatchListService
 from django.db import IntegrityError
@@ -113,3 +115,59 @@ class PremiumTests(TestCase):
     def test_premium_error(self):
         with self.assertRaises(PremiumContentRestrictedError):
             self.service.add_to_watchlist(self.user, self.premium_movie.id)
+
+
+class MovieApiSerializerSelectionTests(APITestCase):
+    def setUp(self):
+        self.genre = Genre.objects.create(name="Action", slug="action")
+        self.movie = Movie.objects.create(
+            title="Movie",
+            description="Description",
+            poster_url="https://example.com/poster.jpg",
+            hls_url="https://example.com/stream.m3u8",
+            is_published=True,
+            is_premium=False,
+        )
+        self.movie.genres.add(self.genre)
+
+    def test_movies_list_uses_compact_structure(self):
+        response = self.client.get("/api/v1/movies/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("results", response.data)
+        self.assertEqual(len(response.data["results"]), 1)
+
+        movie_data = response.data["results"][0]
+
+        self.assertEqual(movie_data["id"], self.movie.id)
+        self.assertEqual(
+            set(movie_data.keys()),
+            {
+                "id",
+                "title",
+                "poster_url",
+                "release_date",
+                "is_premium",
+                "is_published",
+            },
+        )
+        self.assertNotIn("description", movie_data)
+        self.assertNotIn("genres", movie_data)
+
+    def test_movies_detail_uses_full_structure(self):
+        response = self.client.get(f"/api/v1/movies/{self.movie.id}/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["id"], self.movie.id)
+        self.assertEqual(response.data["description"], self.movie.description)
+        self.assertIn("hls_url", response.data)
+        self.assertIn("genres", response.data)
+        self.assertIn("created_at", response.data)
+        self.assertIn("updated_at", response.data)
+        self.assertNotIn("results", response.data)
+
+        self.assertEqual(len(response.data["genres"]), 1)
+        self.assertEqual(
+            set(response.data["genres"][0].keys()),
+            {"id", "name", "slug"},
+        )
