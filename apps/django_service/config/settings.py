@@ -37,8 +37,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "django_filters",
-    "apps.django_service.users.apps.UsersConfig",
-    "apps.django_service.movies.apps.MoviesConfig",
+    "users.apps.UsersConfig",
+    "movies.apps.MoviesConfig",
 ]
 
 REST_FRAMEWORK = {

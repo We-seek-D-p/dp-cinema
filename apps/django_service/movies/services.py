@@ -7,7 +7,7 @@ from .errors import (
 )
 from .models import Watchlist
 from .repositories import WatchListRepository, MovieRepository
-from apps.django_service.users.models import User
+from users.models import User
 
 
 class WatchListService:

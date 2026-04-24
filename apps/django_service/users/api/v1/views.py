@@ -3,14 +3,14 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import (
+from users.api.v1.serializers import (
     UserCreateSerializer,
     UserLoginRequestSerializer,
-    UserPublicSerializer,
     UserProfileUpdateSerializer,
+    UserPublicSerializer,
     UserRecoveryRequestSerializer,
 )
-from .services import UserService
+from users.services import UserService
 
 
 class UserAccountController(APIView):

@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from apps.django_service.users.services import UserService
-from apps.django_service.users.errors import (
+from users.services import UserService
+from users.errors import (
     UserNotFoundError,
     UserAlreadyExistsError,
     InvalidCredentialsError,
