@@ -38,9 +38,12 @@ class UserServiceTests(TestCase):
         self.assertEqual(updated.first_name, "newname")
     
     def test_deactivate_account(self):
-        result = self.service.deactivate_account(self.user.id, self.user)
-        self.assertTrue(result)
+        self.service.deactivate_account(self.user.id, self.user)
         self.assertFalse(User.objects.filter(id=self.user.id).exists())
+
+        deactivated_user = User.all_with_deleted.get(id=self.user.id)
+        self.assertIsNotNone(deactivated_user.deleted_at)
+        self.assertFalse(deactivated_user.is_active)
     
     def test_recover_account(self):
         self.service.deactivate_account(self.user.id, self.user)
