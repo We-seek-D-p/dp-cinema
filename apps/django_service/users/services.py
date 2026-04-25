@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
-from .repositories import UserRepository
+from .repositories import UserRepository, UserSubscriptionRepository
 from .errors import (
     UserNotFoundError,
     UserAlreadyExistsError,
@@ -12,12 +12,14 @@ from .errors import (
     UserRecoveryError,
     EmailRequiredError,
     UsernameRequiredError,
+    InvalidSubscriptionDurationError,
 )
 
 
 class UserService:
     def __init__(self):
         self.repo = UserRepository()
+        self.sub_repo = UserSubscriptionRepository()
 
     def get_profile(self, user_id: int) -> User:
         user = self.repo.get_any_by_id(user_id)
@@ -89,3 +91,12 @@ class UserService:
         if not user or not user.deleted_at:
             raise UserRecoveryError()
         return self.repo.restore(user)
+
+    def subscribe_user(self, user_id: int, days: int) -> User:
+        if days <= 0:
+            raise InvalidSubscriptionDurationError()
+
+        user = self.get_profile(user_id)
+        self.sub_repo.create(user, days)
+
+        return self.repo.get_by_id(user_id)
