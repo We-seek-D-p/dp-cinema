@@ -8,7 +8,7 @@ from users.api.v1.serializers import (
     UserLoginRequestSerializer,
     UserProfileUpdateSerializer,
     UserPublicSerializer,
-    UserRecoveryRequestSerializer,
+    UserRecoveryRequestSerializer, UserSubscriptionResponseSerializer, UserSubscriptionRequestSerializer,
 )
 from users.services import UserService
 
@@ -83,3 +83,19 @@ class UserRecoveryController(APIView):
         service = UserService()
         user = service.recover_account(serializer.validated_data["email"])
         return Response(UserPublicSerializer(user).data)
+
+
+class UserSubscribeController(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        serializer = UserSubscriptionRequestSerializer(request.data)
+        serializer.is_valid(raise_exception=True)
+
+        service = UserService()
+        subscription = service.subscribe_user(pk, serializer.validated_data["days"])
+
+        return Response(
+            UserSubscriptionResponseSerializer(data=subscription).data,
+            status=status.HTTP_201_CREATED,
+        )

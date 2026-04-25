@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from users.models import User
+from users.models import User, Subscription
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -31,3 +31,12 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
 
 class UserRecoveryRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
+
+class UserSubscriptionResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscription
+        fields = ["id", "subscribed_at", "expires_at"]
+
+
+class UserSubscriptionRequestSerializer(serializers.ModelSerializer):
+    days = serializers.IntegerField(min_value=1, max_value=365, default=30)
