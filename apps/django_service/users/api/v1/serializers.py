@@ -1,6 +1,5 @@
 from rest_framework import serializers
-
-from users.models import User, Subscription
+from users.models import Subscription, User
 
 
 class UserCreateSerializer(serializers.ModelSerializer):

@@ -1,5 +1,4 @@
 from django.urls import path
-
 from users.api.v1.views import (
     UserAccountController,
     UserLoginController,

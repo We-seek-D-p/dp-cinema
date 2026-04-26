@@ -1,5 +1,4 @@
 from django.urls import include, path
-
 from movies.api.v1.urls import (
     movie_urlpatterns,
     watchlist_urlpatterns,

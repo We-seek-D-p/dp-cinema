@@ -1,11 +1,6 @@
 from django.urls import path
+from movies.api.v1.views import GenreViewSet, MovieViewSet, WatchListController
 from rest_framework.routers import DefaultRouter
-
-from movies.api.v1.views import (
-    GenreViewSet,
-    MovieViewSet,
-    WatchListController
-)
 
 movies_router = DefaultRouter()
 movies_router.register("genres", GenreViewSet, basename="genres")

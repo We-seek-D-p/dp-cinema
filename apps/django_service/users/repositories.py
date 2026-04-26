@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from .models import User, Subscription
+from .models import Subscription, User
 
 
 class UserRepository:

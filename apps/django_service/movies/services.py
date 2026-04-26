@@ -1,13 +1,16 @@
+import httpx
+from django.conf import settings
 from django.db.models import QuerySet
+from users.models import User
+
 from .errors import (
-    MovieNotFoundError,
     AlreadyInWatchlistError,
+    MovieNotFoundError,
     PremiumContentRestrictedError,
     WatchlistItemNotFoundError,
 )
 from .models import Watchlist
-from .repositories import WatchListRepository, MovieRepository
-from users.models import User
+from .repositories import MovieRepository, WatchListRepository
 
 
 class WatchListService:
@@ -37,3 +40,39 @@ class WatchListService:
             raise WatchlistItemNotFoundError()
 
         self.watchlist_repo.delete(watchlist)
+
+
+class MovieUploadService:
+    def __init__(self):
+        self.movie_repo = MovieRepository()
+        self.fastapi_url = settings.FASTAPI_SERVICE_URL
+
+    async def process_movie(self, movie_id: int, input_url: str | None) -> dict:
+        movie = self.movie_repo.get_by_id(movie_id)
+
+        source_url = input_url or movie.source_url
+        if not source_url:
+            raise ValueError("No source URL provided")
+
+        if input_url and input_url != movie.source_url:
+            self.movie_repo.update_source_url(movie, input_url)
+
+        return await self._send_to_fastapi(movie_id, source_url)
+
+    async def _send_to_fastapi(self, movie_id: int, source_url: str) -> dict:
+        payload = {
+            "movie_id": movie_id,
+            "source_url": source_url
+        }
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.fastapi_url}/api/v1/process/",
+                    json=payload,
+                    timeout=10.0
+                )
+                response.raise_for_status()
+                return response.json()
+        except httpx.HTTPError as e:
+            return {"error": "FastAPI service is down", "details": str(e)}

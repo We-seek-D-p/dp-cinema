@@ -1,19 +1,19 @@
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .errors import (
+    EmailRequiredError,
+    InvalidCredentialsError,
+    InvalidSubscriptionDurationError,
+    PermissionDeniedError,
+    UserAlreadyExistsError,
+    UserDeactivatedError,
+    UsernameRequiredError,
+    UserNotFoundError,
+    UserRecoveryError,
+)
 from .models import User
 from .repositories import UserRepository, UserSubscriptionRepository
-from .errors import (
-    UserNotFoundError,
-    UserAlreadyExistsError,
-    InvalidCredentialsError,
-    UserDeactivatedError,
-    PermissionDeniedError,
-    UserRecoveryError,
-    EmailRequiredError,
-    UsernameRequiredError,
-    InvalidSubscriptionDurationError,
-)
 
 
 class UserService:

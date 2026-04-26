@@ -1,7 +1,8 @@
-from django.utils import timezone
 from django.db.models import QuerySet
-from .models import Movie, Watchlist
+from django.utils import timezone
 from users.models import User
+
+from .models import Movie, Watchlist
 
 
 class MovieRepository:
@@ -10,6 +11,11 @@ class MovieRepository:
 
     def get_by_id(self, movie_id: int) -> Movie | None:
         return self.get_published().filter(id=movie_id).first()
+
+    def update_source_url(self, movie: Movie, source_url: str) -> Movie:
+        movie.source_url = source_url
+        movie.save()
+        return movie
 
 
 class WatchListRepository:
