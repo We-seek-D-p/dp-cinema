@@ -1,0 +1,14 @@
+[project]
+name = "fastapi-service"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "celery>=5.6.3",
+    "fastapi>=0.136.1",
+    "httpx>=0.28.1",
+    "pydantic>=2.13.3",
+    "redis>=7.4.0",
+    "uvicorn>=0.46.0",
+]
