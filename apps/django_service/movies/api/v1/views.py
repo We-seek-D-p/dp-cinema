@@ -111,3 +111,23 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
         except Exception as e:
             return Response({"error": "Internal server error", "details": str(e)},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class MovieCallbackController(APIView):
+    permission_classes = [AllowAny] # Костыль на время - надо использовать secret key для 2 сервисов
+
+    def post(self, request):
+        movie_id = request.data.get("movie_id")
+        hls_url = request.data.get("hls_url")
+
+        if not movie_id or not hls_url:
+            return Response({"error": "Missing data"}, status=status.HTTP_400_BAD_REQUEST)
+
+        service = MovieUploadService()
+        result = service.finalize_processing(movie_id, hls_url)
+
+        if not result:
+            return Response({"error": "Movie not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({"status": "success"}, status=200)
+

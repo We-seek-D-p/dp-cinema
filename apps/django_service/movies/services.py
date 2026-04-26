@@ -76,3 +76,10 @@ class MovieUploadService:
                 return response.json()
         except httpx.HTTPError as e:
             return {"error": "FastAPI service is down", "details": str(e)}
+
+    def finalize_processing(self, movie_id: int, hls_url: str):
+        movie = self.movie_repo.get_by_id(movie_id)
+        if not movie:
+            return MovieNotFoundError()
+
+        return self.movie_repo.finalize_movie(movie, hls_url)

@@ -11,4 +11,5 @@ movie_urlpatterns = movies_router.urls
 watchlist_urlpatterns = [
     path("", WatchListController.as_view(), name="watchlist"),
     path("<int:movie_id>/", WatchListController.as_view(), name="watchlist-item"),
+    path("movies/callback/", MovieCallbackController.as_view(), name="movie-callback"),
 ]

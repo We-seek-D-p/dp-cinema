@@ -17,6 +17,12 @@ class MovieRepository:
         movie.save()
         return movie
 
+    def finalize_movie(self, movie: Movie, hls_url: str):
+        movie.hls_url = hls_url
+        movie.is_published = True
+        movie.save()
+        return movie
+
 
 class WatchListRepository:
     def get_user_watchlist(self, user: User) -> QuerySet[Watchlist, Watchlist]:
