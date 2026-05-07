@@ -1,14 +1,14 @@
 import boto3
 from botocore.client import Config
-import os
+from core.config import settings
 
 
 class S3Client:
     def __init__(self):
-        self.endpoint = os.getenv("S3_ENDPOINT", "http://localhost:9000")
-        self.access_key = "admin"
-        self.secret_key = "password"
-        self.bucket_name = "movies"
+        self.endpoint = settings.S3_ENDPOINT
+        self.access_key = settings.S3_ACCESS_KEY
+        self.secret_key = settings.S3_SECRET_KEY
+        self.bucket_name = settings.S3_BUCKET
 
         self.client = boto3.client(
             's3',
@@ -23,7 +23,7 @@ class S3Client:
     def _ensure_bucket(self):
         try:
             self.client.head_bucket(Bucket=self.bucket_name)
-        except:
+        except Exception:
             self.client.create_bucket(Bucket=self.bucket_name)
 
     def upload_file(self, local_path: str, s3_key: str):

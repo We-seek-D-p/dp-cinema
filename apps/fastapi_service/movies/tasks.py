@@ -4,10 +4,11 @@ import httpx
 import subprocess
 from core.celery_app import celery_app
 from core.s3_client import s3_client
+from core.config import settings
 
 
 def notify_django(movie_id: int, hls_url: str):
-    django_url = "http://localhost:8000/api/v1/movies/callback/"
+    django_url = f"{settings.DJANGO_API_URL}/api/v1/movies/callback/"
 
     payload = {
         "movie_id": movie_id,
