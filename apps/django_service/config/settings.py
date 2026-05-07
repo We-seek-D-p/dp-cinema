@@ -157,3 +157,8 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 AUTH_USER_MODEL = "users.User"
+
+INTERNAL_SERVICE_TOKEN = os.environ.get("INTERNAL_SERVICE_TOKEN")
+
+if IS_PROD and not INTERNAL_SERVICE_TOKEN:
+    raise RuntimeError("INTERNAL_SERVICE_TOKEN must be set in production")
