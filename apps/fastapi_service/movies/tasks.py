@@ -16,9 +16,13 @@ def notify_django(movie_id: int, hls_url: str):
         "status": "completed"
     }
 
+    headers = {
+        "X-Internal-Token": settings.INTERNAL_SERVICE_TOKEN
+    }
+
     try:
         with httpx.Client() as client:
-            response = client.post(django_url, json=payload, timeout=10.0)
+            response = client.post(django_url, json=payload, headers=headers, timeout=10.0)
             response.raise_for_status()
     except Exception as e:
         print(f"Ошибка уведомления Django: {e}")
