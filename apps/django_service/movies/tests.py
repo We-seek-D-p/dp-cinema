@@ -1,19 +1,18 @@
 from datetime import timedelta
 
+from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
-from django.contrib.auth import get_user_model
-from rest_framework.test import APITestCase
-
+from movies.errors import (
+    AlreadyInWatchlistError,
+    MovieNotFoundError,
+    PremiumContentRestrictedError,
+    WatchlistItemNotFoundError,
+)
 from movies.models import Genre, Movie, Watchlist
 from movies.services import WatchListService
-from django.db import IntegrityError
-from movies.errors import (
-    MovieNotFoundError,
-    AlreadyInWatchlistError,
-    WatchlistItemNotFoundError,
-    PremiumContentRestrictedError,
-)
+from rest_framework.test import APITestCase
 
 
 class MovieTests(TestCase):
@@ -87,7 +86,7 @@ class WatchlistServiceTests(TestCase):
     def test_watchlist_not_found(self):
         with self.assertRaises(WatchlistItemNotFoundError):
             self.service.remove_from_watchlist(self.user, self.movie.id)
-    
+
     def test_watchlist_remove_deleted(self):
         self.service.add_to_watchlist(self.user, self.movie.id)
         self.service.remove_from_watchlist(self.user, self.movie.id)
@@ -122,13 +121,13 @@ class PremiumTests(TestCase):
     def test_premium_error(self):
         with self.assertRaises(PremiumContentRestrictedError):
             self.service.add_to_watchlist(self.user, self.premium_movie.id)
-    
+
     def test_premium_upgrade(self):
         self.user.is_premium = True
         self.user.save()
         item = self.service.add_to_watchlist(self.user, self.premium_movie.id)
         self.assertEqual(item.movie, self.premium_movie)
-    
+
     def test_premium_downgrade(self):
         self.premium_user.is_premium = False
         self.premium_user.save()

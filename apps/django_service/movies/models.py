@@ -19,6 +19,7 @@ class Genre(models.Model):
 class Movie(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    source_url = models.URLField(max_length=500, blank=True)
     poster_url = models.URLField(max_length=500, blank=True)
     hls_url = models.URLField(max_length=500, blank=True)
     release_date = models.DateField(null=True, blank=True)

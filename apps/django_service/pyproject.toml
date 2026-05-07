@@ -9,6 +9,7 @@ dependencies = [
     "django-filter>=25.2",
     "djangorestframework-stubs>=3.16.8",
     "python-dotenv>=1.2.2",
+    "httpx>=0.28.1",
 ]
 
 [dependency-groups]

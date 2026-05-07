@@ -1,20 +1,23 @@
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, status, viewsets
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
+import asyncio
 
+from django_filters.rest_framework import DjangoFilterBackend
 from movies.api.v1.serializers import (
     GenreSerializer,
     MovieDetailSerializer,
     MovieListSerializer,
+    MovieProcessRequestSerializer,
     WatchlistCreateSerializer,
     WatchlistSerializer,
 )
 from movies.models import Genre
 from movies.repositories import MovieRepository
-from movies.services import WatchListService
+from movies.services import MovieUploadService, WatchListService
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 
 class WatchlistPagination(PageNumberPagination):
@@ -82,3 +85,49 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == "retrieve":
             return MovieDetailSerializer
         return MovieDetailSerializer
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def process_video(self, request, pk=None):
+        serializer = MovieProcessRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        input_url = serializer.validated_data.get("source_url")
+
+        service = MovieUploadService()
+
+        try:
+            result = asyncio.run(service.process_movie(
+                movie_id=pk,
+                input_url=input_url
+            ))
+
+            if "error" in result:
+                return Response(result, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+            return Response(result, status=status.HTTP_202_ACCEPTED)
+
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": "Internal server error", "details": str(e)},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class MovieCallbackController(APIView):
+    permission_classes = [AllowAny] # Костыль на время - надо использовать secret key для 2 сервисов
+
+    def post(self, request):
+        movie_id = request.data.get("movie_id")
+        hls_url = request.data.get("hls_url")
+
+        if not movie_id or not hls_url:
+            return Response({"error": "Missing data"}, status=status.HTTP_400_BAD_REQUEST)
+
+        service = MovieUploadService()
+        result = service.finalize_processing(movie_id, hls_url)
+
+        if not result:
+            return Response({"error": "Movie not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({"status": "success"}, status=200)
+

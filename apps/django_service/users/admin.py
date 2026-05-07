@@ -2,10 +2,10 @@ from datetime import timedelta
 
 from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin
-from django.utils.translation import ngettext
 from django.utils import timezone
+from django.utils.translation import ngettext
 
-from .models import User, Subscription
+from .models import Subscription, User
 
 
 @admin.register(Subscription)

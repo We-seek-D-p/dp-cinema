@@ -1,14 +1,14 @@
-from django.test import TestCase
 from django.contrib.auth import get_user_model
-from users.services import UserService
+from django.test import TestCase
 from users.errors import (
-    UserNotFoundError,
-    UserAlreadyExistsError,
     InvalidCredentialsError,
-    UserDeactivatedError,
     PermissionDeniedError,
+    UserAlreadyExistsError,
+    UserDeactivatedError,
+    UserNotFoundError,
     UserRecoveryError,
 )
+from users.services import UserService
 
 User = get_user_model()
 
@@ -32,11 +32,11 @@ class UserServiceTests(TestCase):
         result = self.service.authenticate_user(auth_data)
         self.assertIn("access", result)
         self.assertEqual(result["user"], self.user)
-    
+
     def test_update_profile(self):
         updated = self.service.update_profile(self.user.id, {"first_name": "newname"}, self.user)
         self.assertEqual(updated.first_name, "newname")
-    
+
     def test_deactivate_account(self):
         self.service.deactivate_account(self.user.id, self.user)
         self.assertFalse(User.objects.filter(id=self.user.id).exists())
@@ -44,7 +44,7 @@ class UserServiceTests(TestCase):
         deactivated_user = User.all_with_deleted.get(id=self.user.id)
         self.assertIsNotNone(deactivated_user.deleted_at)
         self.assertFalse(deactivated_user.is_active)
-    
+
     def test_recover_account(self):
         self.service.deactivate_account(self.user.id, self.user)
         recovered = self.service.recover_account(self.user.email)
@@ -54,11 +54,11 @@ class UserServiceTests(TestCase):
     def test_authenticate_invalid_error(self):
         with self.assertRaises(InvalidCredentialsError):
             self.service.authenticate_user({"username": "testuser", "password": "wrongone"})
-    
+
     def test_register_duplicate_error(self):
         with self.assertRaises(UserAlreadyExistsError):
             self.service.register(self.user_data)
-    
+
     def test_get_profile_not_found_error(self):
         with self.assertRaises(UserNotFoundError):
             self.service.get_profile(999999)
@@ -80,7 +80,7 @@ class UserServiceTests(TestCase):
     def test_recover_non_existing_user_error(self):
         with self.assertRaises(UserRecoveryError):
             self.service.recover_account("notexist@test.com")
-    
+
     def test_update_wrong_profile_error(self):
         other_user = User.objects.create_user(username="other", password="password#123")
         with self.assertRaises(PermissionDeniedError):

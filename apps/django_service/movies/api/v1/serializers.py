@@ -1,6 +1,5 @@
-from rest_framework import serializers
-
 from movies.models import Genre, Movie, Watchlist
+from rest_framework import serializers
 
 
 class WatchlistCreateSerializer(serializers.Serializer):
@@ -63,3 +62,8 @@ class MovieDetailSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = fields
+
+
+class MovieProcessRequestSerializer(serializers.Serializer):
+    source_url = serializers.URLField(required=False)
+
