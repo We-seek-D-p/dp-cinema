@@ -31,7 +31,8 @@ def notify_django(movie_id: int, hls_url: str):
 @celery_app.task(name="movies.tasks.process_video_task", bind=True)
 def process_video_task(movie_id: int, source_url: str):
     base_dir = f"temp_movies/{movie_id}"
-    os.makedirs(base_dir, exist_ok=True)
+    source_dir = f"{base_dir}/source"
+    os.makedirs(source_dir, exist_ok=True)
     playlist_name = "playlist.m3u8"
     local_playlist_path = os.path.join(base_dir, playlist_name)
 
@@ -40,7 +41,7 @@ def process_video_task(movie_id: int, source_url: str):
         "-c:v", "libx264", "-preset", "veryfast",
         "-c:a", "aac", "-b:a", "128k",
         "-f", "hls", "-hls_time", "6", "-hls_list_size", "0",
-        "-hls_segment_filename", f"{base_dir}/seg_%03d.ts",
+        "-hls_segment_filename", f"{source_dir}/seg_%03d.ts",
         local_playlist_path
     ]
 
