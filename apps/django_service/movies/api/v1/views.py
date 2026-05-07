@@ -18,6 +18,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from movies.api.permissions import InternalTokenPermission 
 
 
 class WatchlistPagination(PageNumberPagination):
@@ -114,7 +115,7 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class MovieCallbackController(APIView):
-    permission_classes = [AllowAny] # Костыль на время - надо использовать secret key для 2 сервисов
+    permission_classes = [InternalTokenPermission] 
 
     def post(self, request):
         movie_id = request.data.get("movie_id")
