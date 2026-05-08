@@ -165,3 +165,35 @@ INTERNAL_SERVICE_TOKEN = os.environ.get("INTERNAL_SERVICE_TOKEN")
 
 if IS_PROD and not INTERNAL_SERVICE_TOKEN:
     raise RuntimeError("INTERNAL_SERVICE_TOKEN must be set in production")
+
+S3_INTERNAL_ENDPOINT = os.environ.get("S3_INTERNAL_ENDPOINT", "http://minio:9000")
+S3_PUBLIC_ENDPOINT = os.environ.get("S3_PUBLIC_ENDPOINT", "http://localhost:9000")
+
+if os.environ.get("USE_S3", "False") == "True":
+    AWS_ACCESS_KEY_ID = os.environ.get("S3_ACCESS_KEY", "minioadmin")
+    AWS_SECRET_ACCESS_KEY = os.environ.get("S3_SECRET_KEY", "minioadmin")
+    AWS_STORAGE_BUCKET_NAME = os.environ.get("S3_BUCKET", "movies")
+    AWS_S3_REGION_NAME = "us-east-1"
+
+    AWS_S3_ENDPOINT_URL = S3_INTERNAL_ENDPOINT
+
+    AWS_S3_USE_SSL = False
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+
+    if S3_PUBLIC_ENDPOINT:
+        AWS_S3_CUSTOM_DOMAIN = f"{S3_PUBLIC_ENDPOINT.replace('http://', '').replace('https://', '')}/{AWS_STORAGE_BUCKET_NAME}"
+        MEDIA_URL = f"{S3_PUBLIC_ENDPOINT}/{AWS_STORAGE_BUCKET_NAME}/"
+
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
+else:
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
+
+FASTAPI_SERVICE_URL = os.environ.get("FASTAPI_SERVICE_URL", "http://localhost:8001")
+
+if IS_PROD and not FASTAPI_SERVICE_URL:
+    raise RuntimeError("FASTAPI_SERVICE_URL must be set in production")
+
+if IS_PROD and not INTERNAL_SERVICE_TOKEN:
+    raise RuntimeError("INTERNAL_SERVICE_TOKEN must be set in production")

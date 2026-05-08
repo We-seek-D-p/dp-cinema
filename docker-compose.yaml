@@ -1,15 +1,166 @@
 services:
   postgres-db:
-    image: postgres:18-alpine
+    image: postgres:15-alpine  # Временно используем версию 15 вместо 18
     container_name: cinema-postgres
     environment:
-      POSTGRES_USER: cinema_user
-      POSTGRES_PASSWORD: cinema_password
-      POSTGRES_DB: cinema_db
+      POSTGRES_USER: ${POSTGRES_USER:-cinema_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cinema_password}
+      POSTGRES_DB: ${POSTGRES_DB:-cinema_db}
     ports:
       - "5432:5432"
     volumes:
-      - cinema-pg:/var/lib/postgresql
+      - cinema-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cinema_user} -d ${POSTGRES_DB:-cinema_db}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - cinema-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: cinema-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - cinema-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: cinema-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - cinema-minio:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - cinema-network
+
+  create-buckets:
+    image: minio/mc:latest
+    container_name: cinema-create-buckets
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin};
+      /usr/bin/mc mb --ignore-existing local/${S3_BUCKET:-movies};
+      /usr/bin/mc anonymous set download local/${S3_BUCKET:-movies};
+      echo 'Buckets created successfully';
+      exit 0;
+      "
+    networks:
+      - cinema-network
+
+  django:
+    build:
+      context: ./apps/django_service
+      dockerfile: Dockerfile
+    container_name: cinema-django
+    working_dir: /app
+    env_file:
+      - ./.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - PYTHONPATH=/app
+      - POSTGRES_HOST=postgres-db
+      - POSTGRES_DB=${POSTGRES_DB:-cinema_db}
+      - POSTGRES_USER=${POSTGRES_USER:-cinema_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-cinema_password}
+      - POSTGRES_PORT=5432
+      - S3_INTERNAL_ENDPOINT=${S3_INTERNAL_ENDPOINT:-http://minio:9000}
+      - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
+      - REDIS_URL=redis://redis:6379/0
+    command: >
+      sh -c "
+      uv run python manage.py migrate &&
+      uv run python manage.py runserver 0.0.0.0:8000
+      "
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/django_service:/app
+    networks:
+      - cinema-network
+
+  fastapi:
+    build:
+      context: ./apps/fastapi_service
+      dockerfile: Dockerfile
+    container_name: cinema-fastapi
+    working_dir: /app
+    env_file:
+      - ./.env
+    environment:
+      - S3_INTERNAL_ENDPOINT=${S3_INTERNAL_ENDPOINT:-http://minio:9000}
+      - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
+      - REDIS_URL=redis://redis:6379/0
+    command: uv run uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./apps/fastapi_service:/app
+    networks:
+      - cinema-network
+
+  worker:
+    build:
+      context: ./apps/fastapi_service
+      dockerfile: Dockerfile
+    container_name: cinema-worker
+    working_dir: /app
+    env_file:
+      - ./.env
+    environment:
+      - S3_INTERNAL_ENDPOINT=${S3_INTERNAL_ENDPOINT:-http://minio:9000}
+      - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
+      - REDIS_URL=redis://redis:6379/0
+    command: uv run celery -A core.celery_app:celery_app worker -l info
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./apps/fastapi_service:/app
+    networks:
+      - cinema-network
 
 volumes:
   cinema-pg:
+  cinema-minio:
+  redis-data:
+
+networks:
+  cinema-network:
+    driver: bridge
