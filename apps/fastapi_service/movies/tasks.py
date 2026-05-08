@@ -28,32 +28,44 @@ def notify_django(movie_id: int, hls_url: str):
         print(f"Ошибка уведомления Django: {e}")
 
 
-@celery_app.task(name="movies.tasks.process_video_task", bind=True)
+@celery_app.task(name="movies.tasks.process_video_task")
 def process_video_task(movie_id: int, source_url: str):
     base_dir = f"temp_movies/{movie_id}"
-    source_dir = f"{base_dir}/source"
+    source_dir = os.path.join(base_dir, "source")
     os.makedirs(source_dir, exist_ok=True)
+
+
     playlist_name = "playlist.m3u8"
-    local_playlist_path = os.path.join(base_dir, playlist_name)
+    local_playlist_path = os.path.join(source_dir, playlist_name)
+    segment_pattern = os.path.join(source_dir, "seg_%05d.ts")
 
     ffmpeg_cmd = [
         "ffmpeg", "-i", source_url,
         "-c:v", "libx264", "-preset", "veryfast",
         "-c:a", "aac", "-b:a", "128k",
         "-f", "hls", "-hls_time", "6", "-hls_list_size", "0",
-        "-hls_segment_filename", f"{source_dir}/seg_%03d.ts",
+        "-hls_segment_filename", segment_pattern,
         local_playlist_path
     ]
 
     try:
         subprocess.run(ffmpeg_cmd, check=True, capture_output=True)
-        for file_name in os.listdir(base_dir):
-            local_file_path = os.path.join(base_dir, file_name)
-            s3_key = f"{movie_id}/{file_name}"
-            s3_client.upload_file(local_file_path, s3_key)
 
-        final_hls_url = f"{s3_client.endpoint}/{s3_client.bucket_name}/{movie_id}/{playlist_name}"
+        master_playlist_path = os.path.join(base_dir, "master.m3u8")
+        with open(master_playlist_path, "w") as f:
+            f.write("#EXTM3U\n")
+            f.write("#EXT-X-STREAM-INF:BANDWIDTH=10000000,NAME=\"Source\"\n")
+            f.write("source/playlist.m3u8\n")
 
+        for root, _, files in os.walk(base_dir):
+            for file in files:
+                local_path = os.path.join(root, file)
+                relative_path = os.path.relpath(local_path, base_dir)
+
+                s3_key = f"{movie_id}/{relative_path}"
+                s3_client.upload_file(local_path, s3_key)
+
+        final_hls_url = f"{s3_client.endpoint}/{s3_client.bucket_name}/{movie_id}/master.m3u8"
         shutil.rmtree(base_dir)
 
         notify_django(movie_id, final_hls_url)
