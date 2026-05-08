@@ -14,6 +14,9 @@ from movies.models import Genre, Movie, Watchlist
 from movies.services import WatchListService
 from rest_framework.test import APITestCase
 
+STANDARD_PASSWORD = "password!123"  # noqa: S105
+PREMIUM_PASSWORD = "password@123"  # noqa: S105
+
 
 class MovieTests(TestCase):
     def setUp(self):
@@ -34,17 +37,17 @@ class MovieTests(TestCase):
 
 class WatchlistServiceTests(TestCase):
     def setUp(self):
-        User = get_user_model()
-        self.user = User.objects.create_user(
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
             username="test_user",
             email="test@test.com",
-            password="password!123",
+            password=STANDARD_PASSWORD,
             is_premium=False,
         )
-        self.premium_user = User.objects.create_user(
+        self.premium_user = user_model.objects.create_user(
             username="premium_user",
             email="premium@test.com",
-            password="password@123",
+            password=PREMIUM_PASSWORD,
             is_premium=True,
         )
 
@@ -79,9 +82,9 @@ class WatchlistServiceTests(TestCase):
 
     def test_movie_not_found(self):
         invalid_ids = (999999, -1)
-        for id in invalid_ids:
+        for movie_id in invalid_ids:
             with self.assertRaises(MovieNotFoundError):
-                self.service.add_to_watchlist(self.user, id)
+                self.service.add_to_watchlist(self.user, movie_id)
 
     def test_watchlist_not_found(self):
         with self.assertRaises(WatchlistItemNotFoundError):
@@ -96,17 +99,17 @@ class WatchlistServiceTests(TestCase):
 
 class PremiumTests(TestCase):
     def setUp(self):
-        User = get_user_model()
-        self.user = User.objects.create_user(
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
             username="test_user",
             email="test@test.com",
-            password="password!123",
+            password=STANDARD_PASSWORD,
             is_premium=False,
         )
-        self.premium_user = User.objects.create_user(
+        self.premium_user = user_model.objects.create_user(
             username="premium_user",
             email="premium@test.com",
-            password="password@123",
+            password=PREMIUM_PASSWORD,
             is_premium=True,
         )
         self.premium_movie = Movie.objects.create(

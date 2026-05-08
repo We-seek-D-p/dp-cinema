@@ -50,10 +50,13 @@ class UserRepository:
 
 class UserSubscriptionRepository:
     def create(self, user: User, days: int) -> Subscription:
-        return Subscription.objects.create(user=user, expires_at=timezone.now() + timedelta(days=days))
+        return Subscription.objects.create(
+            user=user,
+            expires_at=timezone.now() + timedelta(days=days),
+        )
 
     def get_user_history(self, user: User):
         return Subscription.objects.filter(user=user).order_by("-subscribed_at")
 
     def get_latest(self, user: User) -> Subscription | None:
-        return Subscription.objects.filter(user=user).order_by('-expires_at').first()
+        return Subscription.objects.filter(user=user).order_by("-expires_at").first()

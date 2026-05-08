@@ -11,6 +11,8 @@ from users.errors import (
 from users.services import UserService
 
 User = get_user_model()
+DEFAULT_PASSWORD = "password#123"  # noqa: S105
+WRONG_PASSWORD = "wrongone"  # noqa: S105
 
 
 class UserServiceTests(TestCase):
@@ -19,7 +21,7 @@ class UserServiceTests(TestCase):
         self.user_data = {
             "username": "testuser",
             "email": "test@test.com",
-            "password": "password#123"
+            "password": DEFAULT_PASSWORD,
         }
         self.user = self.service.register(self.user_data)
 
@@ -28,13 +30,17 @@ class UserServiceTests(TestCase):
         self.assertTrue(User.all_with_deleted.filter(username="testuser").exists())
 
     def test_authenticate(self):
-        auth_data = {"username": "testuser", "password": "password#123"}
+        auth_data = {"username": "testuser", "password": DEFAULT_PASSWORD}
         result = self.service.authenticate_user(auth_data)
         self.assertIn("access", result)
         self.assertEqual(result["user"], self.user)
 
     def test_update_profile(self):
-        updated = self.service.update_profile(self.user.id, {"first_name": "newname"}, self.user)
+        updated = self.service.update_profile(
+            self.user.id,
+            {"first_name": "newname"},
+            self.user,
+        )
         self.assertEqual(updated.first_name, "newname")
 
     def test_deactivate_account(self):
@@ -53,7 +59,9 @@ class UserServiceTests(TestCase):
 
     def test_authenticate_invalid_error(self):
         with self.assertRaises(InvalidCredentialsError):
-            self.service.authenticate_user({"username": "testuser", "password": "wrongone"})
+            self.service.authenticate_user(
+                {"username": "testuser", "password": WRONG_PASSWORD}
+            )
 
     def test_register_duplicate_error(self):
         with self.assertRaises(UserAlreadyExistsError):
@@ -66,12 +74,18 @@ class UserServiceTests(TestCase):
     def test_authenticate_deactivated_error(self):
         self.service.deactivate_account(self.user.id, self.user)
         with self.assertRaises(UserDeactivatedError):
-            self.service.authenticate_user({"username": "testuser", "password": "password#123"})
+            self.service.authenticate_user(
+                {"username": "testuser", "password": DEFAULT_PASSWORD}
+            )
 
     def test_update_deactivated_profile_error(self):
         self.service.deactivate_account(self.user.id, self.user)
         with self.assertRaises(UserDeactivatedError):
-            self.service.update_profile(self.user.id, {"first_name": "newname"}, self.user)
+            self.service.update_profile(
+                self.user.id,
+                {"first_name": "newname"},
+                self.user,
+            )
 
     def test_recover_active_error(self):
         with self.assertRaises(UserRecoveryError):
@@ -82,6 +96,13 @@ class UserServiceTests(TestCase):
             self.service.recover_account("notexist@test.com")
 
     def test_update_wrong_profile_error(self):
-        other_user = User.objects.create_user(username="other", password="password#123")
+        other_user = User.objects.create_user(
+            username="other",
+            password=DEFAULT_PASSWORD,
+        )
         with self.assertRaises(PermissionDeniedError):
-            self.service.update_profile(self.user.id, {"first_name": "hisnewname"}, other_user)
+            self.service.update_profile(
+                self.user.id,
+                {"first_name": "hisnewname"},
+                other_user,
+            )

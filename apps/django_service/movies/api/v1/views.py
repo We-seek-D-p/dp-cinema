@@ -1,6 +1,7 @@
 import asyncio
 
 from django_filters.rest_framework import DjangoFilterBackend
+from movies.api.permissions import InternalTokenPermission
 from movies.api.v1.serializers import (
     GenreSerializer,
     MovieDetailSerializer,
@@ -18,7 +19,6 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from movies.api.permissions import InternalTokenPermission 
 
 
 class WatchlistPagination(PageNumberPagination):
@@ -97,10 +97,12 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
         service = MovieUploadService()
 
         try:
-            result = asyncio.run(service.process_movie(
-                movie_id=pk,
-                input_url=input_url
-            ))
+            result = asyncio.run(
+                service.process_movie(
+                    movie_id=pk,
+                    input_url=input_url,
+                )
+            )
 
             if "error" in result:
                 return Response(result, status=status.HTTP_503_SERVICE_UNAVAILABLE)
@@ -110,25 +112,32 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({"error": "Internal server error", "details": str(e)},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"error": "Internal server error", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class MovieCallbackController(APIView):
-    permission_classes = [InternalTokenPermission] 
+    permission_classes = [InternalTokenPermission]
 
     def post(self, request):
         movie_id = request.data.get("movie_id")
         hls_url = request.data.get("hls_url")
 
         if not movie_id or not hls_url:
-            return Response({"error": "Missing data"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Missing data"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         service = MovieUploadService()
         result = service.finalize_processing(movie_id, hls_url)
 
         if not result:
-            return Response({"error": "Movie not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Movie not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         return Response({"status": "success"}, status=200)
-

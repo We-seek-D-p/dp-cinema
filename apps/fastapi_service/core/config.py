@@ -1,5 +1,5 @@
+from pydantic import ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator, ValidationInfo
 
 
 class Settings(BaseSettings):
@@ -17,8 +17,8 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
-    @field_validator("REDIS_URL", "S3_ENDPOINT", "S3_ACCESS_KEY", 
-                     "S3_SECRET_KEY", "S3_BUCKET", "DJANGO_API_URL", 
+    @field_validator("REDIS_URL", "S3_ENDPOINT", "S3_ACCESS_KEY",
+                     "S3_SECRET_KEY", "S3_BUCKET", "DJANGO_API_URL",
                      "INTERNAL_SERVICE_TOKEN")
     @classmethod
     def validate_non_empty(cls, v: str, info: ValidationInfo) -> str:

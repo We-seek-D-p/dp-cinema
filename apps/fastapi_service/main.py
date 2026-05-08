@@ -1,5 +1,5 @@
-from fastapi import FastAPI
 from api.v1.api import api_router
+from fastapi import FastAPI
 
 app = FastAPI(title="Video Processing Service")
 

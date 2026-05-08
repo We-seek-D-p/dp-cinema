@@ -26,7 +26,13 @@ class CustomUserAdmin(UserAdmin):
             {"fields": ("avatar_url", "birth_date", "deleted_at")},
         ),
     )
-    list_display = ("username", "email", "is_premium_display", "is_active", "date_joined")
+    list_display = (
+        "username",
+        "email",
+        "is_premium_display",
+        "is_active",
+        "date_joined",
+    )
     list_filter = ("is_staff", "is_active", "is_superuser")
     search_fields = ("username", "email", "first_name", "last_name")
     actions = ("grant_premium_month",)
