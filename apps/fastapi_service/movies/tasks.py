@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import httpx
@@ -6,6 +7,40 @@ from core.celery_app import celery_app
 from core.s3_client import s3_client
 from core.config import settings
 
+
+def get_video_meta(source_url: str):
+    cmd = [
+        "ffprobe", "-v", "error",
+        "-select_streams", "v:0", "-show_entries",
+        "stream=width,height:format=bit_rate", "-of", "json", source_url
+    ]
+
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    data = json.loads(result.stdout)
+
+    streams = data.get("streams") or []
+    if not streams:
+        raise ValueError(f"No video stream found: {source_url}")
+
+    stream = streams[0]
+    format_info = data.get("format") or {}
+
+    if "width" not in stream or "height" not in stream:
+        raise ValueError(f"Video stream has no dimensions: {source_url}")
+
+    width = int(stream["width"])
+    height = int(stream["height"])
+
+    if width <= 0 or height <= 0:
+        raise ValueError(f"Invalid video dimensions {width}x{height} for {source_url}")
+
+    bit_rate_raw = stream.get("bit_rate") or format_info.get("bit_rate")
+    bit_rate = int(bit_rate_raw) if bit_rate_raw else 10_000_000
+
+    if bit_rate <= 0:
+        raise ValueError(f"Invalid video bitrate {bit_rate} for {source_url}")
+
+    return width, height, bit_rate
 
 def notify_django(movie_id: int, hls_url: str):
     django_url = f"{settings.DJANGO_API_URL}/api/v1/movies/callback/"
@@ -33,7 +68,6 @@ def process_video_task(movie_id: int, source_url: str):
     base_dir = f"temp_movies/{movie_id}"
     source_dir = os.path.join(base_dir, "source")
     os.makedirs(source_dir, exist_ok=True)
-
 
     playlist_name = "playlist.m3u8"
     local_playlist_path = os.path.join(source_dir, playlist_name)
