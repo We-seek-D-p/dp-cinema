@@ -1,6 +1,8 @@
-from tasks import process_video_task
-from schemas import VideoProcessRequest, VideoProcessResponse
 import uuid
+
+from .schemas import VideoProcessRequest, VideoProcessResponse
+from .tasks import process_video_task
+
 
 class VideoService:
     def start_processing(self, payload: VideoProcessRequest) -> VideoProcessResponse:
@@ -12,5 +14,6 @@ class VideoService:
         )
 
         return VideoProcessResponse(task_id=task_id, status="accepted")
+
 
 video_service = VideoService()

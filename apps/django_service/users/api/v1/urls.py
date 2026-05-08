@@ -12,5 +12,9 @@ urlpatterns = [
     path("login/", UserLoginController.as_view(), name="login"),
     path("profile/<int:pk>/", UserProfileController.as_view(), name="profile"),
     path("restore/", UserRecoveryController.as_view(), name="restore"),
-    path("<int:pk>/subscribe/", UserSubscribeController.as_view(), name="user-subscribe"),
+    path(
+        "<int:pk>/subscribe/",
+        UserSubscribeController.as_view(),
+        name="user-subscribe",
+    ),
 ]

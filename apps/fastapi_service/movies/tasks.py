@@ -7,7 +7,8 @@ import httpx
 from core.celery_app import celery_app
 from core.config import settings
 from core.s3_client import s3_client
-from transcode_models import QUALITY_PROFILES, HlsVariant
+
+from .transcode_models import QUALITY_PROFILES, HlsVariant
 
 
 def get_video_meta(source_url: str):

@@ -5,7 +5,11 @@ from django.utils import timezone
 
 
 class Subscription(models.Model):
-    user = models.ForeignKey("User", on_delete=models.CASCADE, related_name="subscriptions")
+    user = models.ForeignKey(
+        "User",
+        on_delete=models.CASCADE,
+        related_name="subscriptions",
+    )
     subscribed_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
 

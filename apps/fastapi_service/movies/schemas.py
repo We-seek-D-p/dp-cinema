@@ -1,5 +1,4 @@
-from pydantic import BaseModel, HttpUrl, Field, UUID7
-import uuid
+from pydantic import UUID7, BaseModel, Field, HttpUrl
 
 
 class VideoProcessRequest(BaseModel):
