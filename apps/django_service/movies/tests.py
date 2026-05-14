@@ -13,6 +13,7 @@ from movies.errors import (
 from movies.models import Genre, Movie, Watchlist
 from movies.services import WatchListService
 from rest_framework.test import APITestCase
+from users.models import Subscription
 
 STANDARD_PASSWORD = "password!123"  # noqa: S105
 PREMIUM_PASSWORD = "password@123"  # noqa: S105
@@ -42,13 +43,15 @@ class WatchlistServiceTests(TestCase):
             username="test_user",
             email="test@test.com",
             password=STANDARD_PASSWORD,
-            is_premium=False,
         )
         self.premium_user = user_model.objects.create_user(
             username="premium_user",
             email="premium@test.com",
             password=PREMIUM_PASSWORD,
-            is_premium=True,
+        )
+        Subscription.objects.create(
+            user=self.premium_user,
+            expires_at=timezone.now() + timedelta(days=30),
         )
 
         self.movie = Movie.objects.create(
@@ -104,13 +107,15 @@ class PremiumTests(TestCase):
             username="test_user",
             email="test@test.com",
             password=STANDARD_PASSWORD,
-            is_premium=False,
         )
         self.premium_user = user_model.objects.create_user(
             username="premium_user",
             email="premium@test.com",
             password=PREMIUM_PASSWORD,
-            is_premium=True,
+        )
+        Subscription.objects.create(
+            user=self.premium_user,
+            expires_at=timezone.now() + timedelta(days=30),
         )
         self.premium_movie = Movie.objects.create(
             title="Premium movie", is_published=True, is_premium=True
@@ -126,14 +131,17 @@ class PremiumTests(TestCase):
             self.service.add_to_watchlist(self.user, self.premium_movie.id)
 
     def test_premium_upgrade(self):
-        self.user.is_premium = True
-        self.user.save()
+        Subscription.objects.create(
+            user=self.user,
+            expires_at=timezone.now() + timedelta(days=30),
+        )
         item = self.service.add_to_watchlist(self.user, self.premium_movie.id)
         self.assertEqual(item.movie, self.premium_movie)
 
     def test_premium_downgrade(self):
-        self.premium_user.is_premium = False
-        self.premium_user.save()
+        Subscription.objects.filter(user=self.premium_user).update(
+            expires_at=timezone.now() - timedelta(days=1)
+        )
         with self.assertRaises(PremiumContentRestrictedError):
             self.service.add_to_watchlist(self.premium_user, self.premium_movie.id)
 
