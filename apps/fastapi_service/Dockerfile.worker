@@ -7,7 +7,6 @@ ENV UV_COMPILE_BYTECODE=1 \
 WORKDIR /workspace
 
 COPY pyproject.toml uv.lock ./
-
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --no-editable
 
@@ -17,6 +16,10 @@ ENV PATH="/workspace/.venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN groupadd -g 10001 -r appuser \
     && useradd -u 10001 -r -g appuser -s /usr/sbin/nologin appuser
 
@@ -24,8 +27,7 @@ WORKDIR /app
 COPY --from=build --chown=appuser:appuser /workspace/.venv /workspace/.venv
 COPY --chown=appuser:appuser . /app/
 
-RUN chmod +x /app/docker/api-entrypoint.sh
+RUN chmod +x /app/docker/worker-entrypoint.sh
 USER appuser
-EXPOSE 8001
 
-ENTRYPOINT ["/app/docker/api-entrypoint.sh"]
+ENTRYPOINT ["/app/docker/worker-entrypoint.sh"]

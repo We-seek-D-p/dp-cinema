@@ -1,6 +1,6 @@
 services:
   postgres-db:
-    image: postgres:15-alpine  # Временно используем версию 15 вместо 18
+    image: postgres:18
     container_name: cinema-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-cinema_user}
@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - cinema-pg:/var/lib/postgresql/data
+      - cinema-pg:/var/lib/postgresql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cinema_user} -d ${POSTGRES_DB:-cinema_db}" ]
       interval: 5s
@@ -57,10 +57,10 @@ services:
     image: minio/mc:latest
     container_name: cinema-create-buckets
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     entrypoint: >
       /bin/sh -c "
-      sleep 5;
       /usr/bin/mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin};
       /usr/bin/mc mb --ignore-existing local/${S3_BUCKET:-movies};
       /usr/bin/mc anonymous set download local/${S3_BUCKET:-movies};
@@ -80,7 +80,6 @@ services:
       - ./.env
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings
-      - PYTHONPATH=/app
       - POSTGRES_HOST=postgres-db
       - POSTGRES_DB=${POSTGRES_DB:-cinema_db}
       - POSTGRES_USER=${POSTGRES_USER:-cinema_user}
@@ -89,11 +88,6 @@ services:
       - S3_INTERNAL_ENDPOINT=${S3_INTERNAL_ENDPOINT:-http://minio:9000}
       - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
       - REDIS_URL=redis://redis:6379/0
-    command: >
-      sh -c "
-      uv run python manage.py migrate &&
-      uv run python manage.py runserver 0.0.0.0:8000
-      "
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -103,8 +97,6 @@ services:
         condition: service_healthy
     ports:
       - "8000:8000"
-    volumes:
-      - ./apps/django_service:/app
     networks:
       - cinema-network
 
@@ -120,7 +112,6 @@ services:
       - S3_INTERNAL_ENDPOINT=${S3_INTERNAL_ENDPOINT:-http://minio:9000}
       - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
       - REDIS_URL=redis://redis:6379/0
-    command: uv run uvicorn main:app --host 0.0.0.0 --port 8001 --reload
     depends_on:
       redis:
         condition: service_healthy
@@ -128,16 +119,15 @@ services:
         condition: service_healthy
     ports:
       - "8001:8001"
-    volumes:
-      - ./apps/fastapi_service:/app
     networks:
       - cinema-network
 
   worker:
     build:
       context: ./apps/fastapi_service
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.worker
     container_name: cinema-worker
+    restart: unless-stopped
     working_dir: /app
     env_file:
       - ./.env
@@ -145,14 +135,11 @@ services:
       - S3_INTERNAL_ENDPOINT=${S3_INTERNAL_ENDPOINT:-http://minio:9000}
       - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
       - REDIS_URL=redis://redis:6379/0
-    command: uv run celery -A core.celery_app:celery_app worker -l info
     depends_on:
       redis:
         condition: service_healthy
       minio:
         condition: service_healthy
-    volumes:
-      - ./apps/fastapi_service:/app
     networks:
       - cinema-network
 
