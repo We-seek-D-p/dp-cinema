@@ -16,24 +16,15 @@ fmt:
     uv run ruff format .
     uv run ruff check . --fix
 
-# Run Django tests
-test:
-    uv run python manage.py test
-
-# Check Python code and run tests
+# Check Python code
 check:
     uv run ruff format . --check
     uv run ruff check .
-    @just test
 
-# Run local server
+# Run local API server
 run:
-    uv run python manage.py runserver
+    uv run uvicorn main:app --host 0.0.0.0 --port 8001 --reload
 
-# Apply DB migrations
-migrate:
-    uv run python manage.py migrate
-
-# Create superuser
-createsuperuser:
-    uv run python manage.py createsuperuser
+# Run Celery worker
+worker:
+    uv run celery -A core.celery_app:celery_app worker -l info
