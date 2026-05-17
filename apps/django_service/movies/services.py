@@ -56,25 +56,30 @@ class MovieUploadService:
         if not source_url:
             raise ValueError("No source URL provided")
 
-        if input_url and input_url != movie.source_url:
-            self.movie_repo.update_source_url(movie, input_url)
+        self.movie_repo.mark_processing_queued(movie, source_url)
 
-        return await self._send_to_fastapi(movie_id, source_url)
+        try:
+            result = await self._send_to_fastapi(movie_id, source_url)
+        except httpx.HTTPError as err:
+            self.movie_repo.mark_processing_failed(movie, str(err))
+            return {"error": "FastAPI service is down", "details": str(err)}
+
+        task_id = result.get("task_id")
+        if task_id:
+            self.movie_repo.save_processing_task_id(movie, str(task_id))
+        return result
 
     async def _send_to_fastapi(self, movie_id: int, source_url: str) -> dict:
         payload = {"movie_id": movie_id, "source_url": source_url}
 
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"{self.fastapi_url}/api/v1/movies/process/",
-                    json=payload,
-                    timeout=10.0,
-                )
-                response.raise_for_status()
-                return response.json()
-        except httpx.HTTPError as e:
-            return {"error": "FastAPI service is down", "details": str(e)}
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{self.fastapi_url}/api/v1/movies/process/",
+                json=payload,
+                timeout=10.0,
+            )
+            response.raise_for_status()
+            return response.json()
 
     def finalize_processing(self, movie_id: int, hls_url: str):
         movie = self.movie_repo.get_by_id_internal(movie_id)
