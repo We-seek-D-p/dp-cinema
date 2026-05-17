@@ -15,7 +15,7 @@ class Subscription(models.Model):
 
     class Meta:
         db_table = "subscriptions"
-        indexes = [models.Index(fields=['user', 'expires_at'])]
+        indexes = [models.Index(fields=["user", "expires_at"])]
 
     @classmethod
     def check_expiration(cls):
@@ -24,13 +24,15 @@ class Subscription(models.Model):
 
 class ActiveUserManager(UserManager):
     def get_queryset(self):
-        return super().get_queryset().filter(
-            deleted_at__isnull=True
-        ).annotate(
-            _is_premium=Exists(
-                Subscription.objects.filter(
-                    Subscription.check_expiration(),
-                    user=OuterRef("pk")
+        return (
+            super()
+            .get_queryset()
+            .filter(deleted_at__isnull=True)
+            .annotate(
+                _is_premium=Exists(
+                    Subscription.objects.filter(
+                        Subscription.check_expiration(), user=OuterRef("pk")
+                    )
                 )
             )
         )

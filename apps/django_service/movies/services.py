@@ -60,17 +60,14 @@ class MovieUploadService:
         return await self._send_to_fastapi(movie_id, source_url)
 
     async def _send_to_fastapi(self, movie_id: int, source_url: str) -> dict:
-        payload = {
-            "movie_id": movie_id,
-            "source_url": source_url
-        }
+        payload = {"movie_id": movie_id, "source_url": source_url}
 
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     f"{self.fastapi_url}/api/v1/movies/process/",
                     json=payload,
-                    timeout=10.0
+                    timeout=10.0,
                 )
                 response.raise_for_status()
                 return response.json()

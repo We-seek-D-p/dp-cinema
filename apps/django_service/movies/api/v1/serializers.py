@@ -66,4 +66,3 @@ class MovieDetailSerializer(serializers.ModelSerializer):
 
 class MovieProcessRequestSerializer(serializers.Serializer):
     source_url = serializers.URLField(required=False)
-

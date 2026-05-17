@@ -87,7 +87,7 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
             return MovieDetailSerializer
         return MovieDetailSerializer
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    @action(detail=True, methods=["post"], permission_classes=[IsAdminUser])
     def process_video(self, request, pk=None):
         serializer = MovieProcessRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
