@@ -193,7 +193,10 @@ if os.environ.get("USE_S3", "False") == "True":
     AWS_S3_SIGNATURE_VERSION = "s3v4"
 
     if S3_PUBLIC_ENDPOINT:
-        AWS_S3_CUSTOM_DOMAIN = f"{S3_PUBLIC_ENDPOINT.replace('http://', '').replace('https://', '')}/{AWS_STORAGE_BUCKET_NAME}"
+        s3_public_host = S3_PUBLIC_ENDPOINT.replace("http://", "").replace(
+            "https://", ""
+        )
+        AWS_S3_CUSTOM_DOMAIN = f"{s3_public_host}/{AWS_STORAGE_BUCKET_NAME}"
         MEDIA_URL = f"{S3_PUBLIC_ENDPOINT}/{AWS_STORAGE_BUCKET_NAME}/"
 
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
