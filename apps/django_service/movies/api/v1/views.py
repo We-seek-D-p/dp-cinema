@@ -10,6 +10,7 @@ from movies.api.v1.serializers import (
     WatchlistCreateSerializer,
     WatchlistSerializer,
 )
+from movies.errors import MovieNotFoundError
 from movies.models import Genre
 from movies.repositories import MovieRepository
 from movies.services import MovieUploadService, WatchListService
@@ -111,6 +112,11 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
 
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except MovieNotFoundError:
+            return Response(
+                {"error": "Movie not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         except Exception as e:
             return Response(
                 {"error": "Internal server error", "details": str(e)},

@@ -9,8 +9,14 @@ class MovieRepository:
     def get_published(self) -> QuerySet[Movie, Movie]:
         return Movie.objects.filter(is_published=True, deleted_at__isnull=True)
 
+    def get_active(self) -> QuerySet[Movie, Movie]:
+        return Movie.objects.filter(deleted_at__isnull=True)
+
     def get_by_id(self, movie_id: int) -> Movie | None:
         return self.get_published().filter(id=movie_id).first()
+
+    def get_by_id_internal(self, movie_id: int) -> Movie | None:
+        return self.get_active().filter(id=movie_id).first()
 
     def update_source_url(self, movie: Movie, source_url: str) -> Movie:
         movie.source_url = source_url

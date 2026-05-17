@@ -48,7 +48,9 @@ class MovieUploadService:
         self.fastapi_url = settings.FASTAPI_SERVICE_URL
 
     async def process_movie(self, movie_id: int, input_url: str | None) -> dict:
-        movie = self.movie_repo.get_by_id(movie_id)
+        movie = self.movie_repo.get_by_id_internal(movie_id)
+        if not movie:
+            raise MovieNotFoundError()
 
         source_url = input_url or movie.source_url
         if not source_url:
@@ -75,8 +77,8 @@ class MovieUploadService:
             return {"error": "FastAPI service is down", "details": str(e)}
 
     def finalize_processing(self, movie_id: int, hls_url: str):
-        movie = self.movie_repo.get_by_id(movie_id)
+        movie = self.movie_repo.get_by_id_internal(movie_id)
         if not movie:
-            return MovieNotFoundError()
+            return None
 
         return self.movie_repo.finalize_movie(movie, hls_url)
