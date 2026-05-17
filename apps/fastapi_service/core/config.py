@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     S3_BUCKET: str
 
     @property
-    def S3_ENDPOINT(self) -> str:
+    def s3_endpoint(self) -> str:
         """Для совместимости со старым кодом возвращает INTERNAL endpoint"""
         return self.S3_INTERNAL_ENDPOINT
 

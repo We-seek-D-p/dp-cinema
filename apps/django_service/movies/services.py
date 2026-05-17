@@ -68,7 +68,7 @@ class MovieUploadService:
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    f"{self.fastapi_url}/api/v1/process/",
+                    f"{self.fastapi_url}/api/v1/movies/process/",
                     json=payload,
                     timeout=10.0
                 )

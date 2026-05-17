@@ -1,30 +1,32 @@
-FROM python:3.11-slim
+FROM ghcr.io/astral-sh/uv:0.11.14-python3.14-trixie AS build
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never
+
+WORKDIR /workspace
+
+COPY pyproject.toml uv.lock ./
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-dev --no-editable
+
+FROM python:3.14-slim AS runtime
+
+ENV PATH="/workspace/.venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+RUN groupadd -g 10001 -r appuser \
+    && useradd -u 10001 -r -g appuser -s /usr/sbin/nologin appuser
 
 WORKDIR /app
+COPY --from=build --chown=appuser:appuser /workspace/.venv /workspace/.venv
+COPY --chown=appuser:appuser . /app/
 
-RUN apt-get update && apt-get install -y \
-    gcc \
-    postgresql-client \
-    libpq-dev \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+RUN chmod +x /app/docker/entrypoint.sh
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
-COPY pyproject.toml uv.lock* ./
-
-RUN if [ ! -f pyproject.toml ]; then \
-    uv init --app && \
-    uv add django djangorestframework django-cors-headers psycopg2-binary python-dotenv boto3 django-storages; \
-    fi
-
-RUN if [ -f uv.lock ]; then uv sync --frozen --no-dev; else uv sync; fi
-
-COPY . .
-
-RUN useradd -m -u 1000 django && chown -R django:django /app
-USER django
+USER appuser
 
 EXPOSE 8000
-
-CMD ["uv", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+ENTRYPOINT ["/app/docker/entrypoint.sh"]

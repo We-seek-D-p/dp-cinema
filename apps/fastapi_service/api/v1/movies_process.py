@@ -1,7 +1,6 @@
 from fastapi import APIRouter, status
-
-from ...movies.schemas import VideoProcessRequest, VideoProcessResponse
-from ...movies.services import video_service
+from movies.schemas import VideoProcessRequest, VideoProcessResponse
+from movies.services import video_service
 
 router = APIRouter()
 
