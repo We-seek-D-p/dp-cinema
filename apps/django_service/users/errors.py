@@ -49,8 +49,8 @@ class UsernameRequiredError(DomainError):
     default_message = "Username is required"
     http_status_code = status.HTTP_400_BAD_REQUEST
 
+
 class InvalidSubscriptionDurationError(DomainError):
     default_code = "invalid_subscription_duration"
     default_message = "Subscription duration must be positive"
     http_status_code = status.HTTP_400_BAD_REQUEST
-

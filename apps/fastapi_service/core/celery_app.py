@@ -5,7 +5,7 @@ celery_app = Celery(
     "video_processor",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
-    include=["movies.tasks"]
+    include=["movies.tasks"],
 )
 
 celery_app.conf.update(

@@ -16,24 +16,19 @@ fmt:
     uv run ruff format .
     uv run ruff check . --fix
 
-# Run Django tests
-test:
-    uv run python manage.py test
-
-# Check Python code and run tests
+# Check Python code
 check:
     uv run ruff format . --check
     uv run ruff check .
-    @just test
 
-# Run local server
+# Run local Flask server
 run:
-    uv run python manage.py runserver
+    uv run python main.py
+
+# Create migration
+migrate message="auto":
+    uv run flask --app main:create_app db migrate -m "{{message}}"
 
 # Apply DB migrations
-migrate:
-    uv run python manage.py migrate
-
-# Create superuser
-createsuperuser:
-    uv run python manage.py createsuperuser
+upgrade:
+    uv run flask --app main:create_app db upgrade

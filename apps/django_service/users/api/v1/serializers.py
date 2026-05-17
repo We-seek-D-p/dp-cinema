@@ -31,6 +31,7 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
 class UserRecoveryRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
+
 class UserSubscriptionResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription

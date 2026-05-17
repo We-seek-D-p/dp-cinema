@@ -41,9 +41,7 @@ SECRET_KEY = os.environ.get(
 if IS_PROD and SECRET_KEY.startswith("django-insecure"):
     raise RuntimeError("DJANGO_SECRET_KEY must be set in production")
 
-DEBUG = (
-    os.environ.get("DJANGO_DEBUG", "True" if IS_DEV else "False") == "True"
-)
+DEBUG = os.environ.get("DJANGO_DEBUG", "True" if IS_DEV else "False") == "True"
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -141,8 +139,7 @@ else:
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": (
-            "django.contrib.auth.password_validation."
-            "UserAttributeSimilarityValidator"
+            "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
         ),
     },
     {

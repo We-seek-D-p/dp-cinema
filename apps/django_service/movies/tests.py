@@ -332,9 +332,7 @@ class MovieApiListBehaviorTests(APITestCase):
         response = self.client.get("/api/v1/movies/?ordering=title")
 
         expected_ids = list(
-            self._published_movies()
-            .order_by("title")
-            .values_list("id", flat=True)[:20]
+            self._published_movies().order_by("title").values_list("id", flat=True)[:20]
         )
 
         self.assertEqual(response.status_code, 200)
@@ -368,9 +366,7 @@ class MovieApiListBehaviorTests(APITestCase):
         response = self.client.get("/api/v1/movies/?ordering=unknown_field")
 
         expected_ids = list(
-            self._published_movies()
-            .order_by("title")
-            .values_list("id", flat=True)[:20]
+            self._published_movies().order_by("title").values_list("id", flat=True)[:20]
         )
 
         self.assertEqual(response.status_code, 200)

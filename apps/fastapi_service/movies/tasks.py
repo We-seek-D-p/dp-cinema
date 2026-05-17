@@ -13,9 +13,16 @@ from .transcode_models import QUALITY_PROFILES, HlsVariant
 
 def get_video_meta(source_url: str):
     cmd = [
-        "ffprobe", "-v", "error",
-        "-select_streams", "v:0", "-show_entries",
-        "stream=width,height:format=bit_rate", "-of", "json", source_url
+        "ffprobe",
+        "-v",
+        "error",
+        "-select_streams",
+        "v:0",
+        "-show_entries",
+        "stream=width,height:format=bit_rate",
+        "-of",
+        "json",
+        source_url,
     ]
 
     result = subprocess.run(  # noqa: S603
@@ -54,15 +61,9 @@ def get_video_meta(source_url: str):
 def notify_django(movie_id: int, hls_url: str):
     django_url = f"{settings.DJANGO_API_URL}/api/v1/movies/callback/"
 
-    payload = {
-        "movie_id": movie_id,
-        "hls_url": hls_url,
-        "status": "completed"
-    }
+    payload = {"movie_id": movie_id, "hls_url": hls_url, "status": "completed"}
 
-    headers = {
-        "X-Internal-Token": settings.INTERNAL_SERVICE_TOKEN
-    }
+    headers = {"X-Internal-Token": settings.INTERNAL_SERVICE_TOKEN}
 
     try:
         with httpx.Client() as client:
@@ -110,16 +111,34 @@ def process_video_task(movie_id: int, source_url: str):
             segment_pattern = os.path.join(variant_dir, "seg_%05d.ts")
 
             ffmpeg_cmd = [
-                "ffmpeg", "-i", source_url,
-                "-vf", f"scale=-2:{profile.height}",
-                "-c:v", "libx264", "-preset", "veryfast",
-                "-b:v", profile.video_bitrate,
-                "-maxrate", profile.max_rate,
-                "-bufsize", profile.buf_size,
-                "-c:a", "aac", "-b:a", "128k",
-                "-f", "hls", "-hls_time", "6", "-hls_list_size", "0",
-                "-hls_segment_filename", segment_pattern,
-                local_playlist_path
+                "ffmpeg",
+                "-i",
+                source_url,
+                "-vf",
+                f"scale=-2:{profile.height}",
+                "-c:v",
+                "libx264",
+                "-preset",
+                "veryfast",
+                "-b:v",
+                profile.video_bitrate,
+                "-maxrate",
+                profile.max_rate,
+                "-bufsize",
+                profile.buf_size,
+                "-c:a",
+                "aac",
+                "-b:a",
+                "128k",
+                "-f",
+                "hls",
+                "-hls_time",
+                "6",
+                "-hls_list_size",
+                "0",
+                "-hls_segment_filename",
+                segment_pattern,
+                local_playlist_path,
             ]
             _run_cmd(ffmpeg_cmd)
 
@@ -144,22 +163,46 @@ def process_video_task(movie_id: int, source_url: str):
         source_segment_pattern = os.path.join(source_dir, "seg_%05d.ts")
 
         source_cmd_copy = [
-            "ffmpeg", "-i", source_url,
-            "-c:v", "copy", "-c:a", "copy",
-            "-f", "hls", "-hls_time", "6", "-hls_list_size", "0",
-            "-hls_segment_filename", source_segment_pattern,
-            source_playlist_path
+            "ffmpeg",
+            "-i",
+            source_url,
+            "-c:v",
+            "copy",
+            "-c:a",
+            "copy",
+            "-f",
+            "hls",
+            "-hls_time",
+            "6",
+            "-hls_list_size",
+            "0",
+            "-hls_segment_filename",
+            source_segment_pattern,
+            source_playlist_path,
         ]
 
         try:
             _run_cmd(source_cmd_copy)
         except RuntimeError:
             source_cmd_aac = [
-                "ffmpeg", "-i", source_url,
-                "-c:v", "copy", "-c:a", "aac", "-b:a", "128k",
-                "-f", "hls", "-hls_time", "6", "-hls_list_size", "0",
-                "-hls_segment_filename", source_segment_pattern,
-                source_playlist_path
+                "ffmpeg",
+                "-i",
+                source_url,
+                "-c:v",
+                "copy",
+                "-c:a",
+                "aac",
+                "-b:a",
+                "128k",
+                "-f",
+                "hls",
+                "-hls_time",
+                "6",
+                "-hls_list_size",
+                "0",
+                "-hls_segment_filename",
+                source_segment_pattern,
+                source_playlist_path,
             ]
             _run_cmd(source_cmd_aac)
 
@@ -180,7 +223,7 @@ def process_video_task(movie_id: int, source_url: str):
                 f.write(
                     f"#EXT-X-STREAM-INF:BANDWIDTH={variant.bandwidth},"
                     f"RESOLUTION={variant.width}x{variant.height},"
-                    f"NAME=\"{variant.name}\"\n"
+                    f'NAME="{variant.name}"\n'
                 )
                 f.write(f"{variant.dir}/playlist.m3u8\n")
 

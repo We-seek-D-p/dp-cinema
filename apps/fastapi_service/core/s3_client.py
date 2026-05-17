@@ -16,12 +16,12 @@ class S3Client:
         self.bucket_name = settings.S3_BUCKET
 
         self.client = boto3.client(
-            's3',
+            "s3",
             endpoint_url=self.internal_endpoint,
             aws_access_key_id=self.access_key,
             aws_secret_access_key=self.secret_key,
-            config=Config(signature_version='s3v4'),
-            region_name='us-east-1'
+            config=Config(signature_version="s3v4"),
+            region_name="us-east-1",
         )
         self._ensure_bucket()
 
@@ -43,9 +43,9 @@ class S3Client:
     def get_presigned_url(self, s3_key: str, expires_in: int = 3600) -> str:
         """Генерирует подписанный URL с ПУБЛИЧНЫМ эндпоинтом"""
         url = self.client.generate_presigned_url(
-            'get_object',
-            Params={'Bucket': self.bucket_name, 'Key': s3_key},
-            ExpiresIn=expires_in
+            "get_object",
+            Params={"Bucket": self.bucket_name, "Key": s3_key},
+            ExpiresIn=expires_in,
         )
         url = url.replace(self.internal_endpoint, self.public_endpoint)
         return url

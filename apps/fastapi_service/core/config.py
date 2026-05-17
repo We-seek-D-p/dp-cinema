@@ -21,14 +21,19 @@ class Settings(BaseSettings):
     INTERNAL_SERVICE_TOKEN: str
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
 
-    @field_validator("REDIS_URL", "S3_INTERNAL_ENDPOINT", "S3_PUBLIC_ENDPOINT",
-                     "S3_ACCESS_KEY", "S3_SECRET_KEY", "S3_BUCKET",
-                     "DJANGO_API_URL", "INTERNAL_SERVICE_TOKEN")
+    @field_validator(
+        "REDIS_URL",
+        "S3_INTERNAL_ENDPOINT",
+        "S3_PUBLIC_ENDPOINT",
+        "S3_ACCESS_KEY",
+        "S3_SECRET_KEY",
+        "S3_BUCKET",
+        "DJANGO_API_URL",
+        "INTERNAL_SERVICE_TOKEN",
+    )
     @classmethod
     def validate_non_empty(cls, v: str, info: ValidationInfo) -> str:
         if not v or not v.strip():
