@@ -71,19 +71,36 @@ class MovieUploadService:
 
     async def _send_to_fastapi(self, movie_id: int, source_url: str) -> dict:
         payload = {"movie_id": movie_id, "source_url": source_url}
+        headers = {"X-Internal-Token": settings.INTERNAL_SERVICE_TOKEN}
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{self.fastapi_url}/api/v1/movies/process/",
                 json=payload,
+                headers=headers,
                 timeout=10.0,
             )
             response.raise_for_status()
             return response.json()
 
-    def finalize_processing(self, movie_id: int, hls_url: str):
+    def finalize_processing(
+        self,
+        movie_id: int,
+        status: str,
+        hls_url: str | None = None,
+        error: str | None = None,
+    ):
         movie = self.movie_repo.get_by_id_internal(movie_id)
         if not movie:
             return None
 
-        return self.movie_repo.finalize_movie(movie, hls_url)
+        if status == "completed":
+            if not hls_url:
+                raise ValueError("hls_url is required for completed status")
+            return self.movie_repo.finalize_movie(movie, hls_url)
+
+        if status == "failed":
+            error_text = error or "Processing failed"
+            return self.movie_repo.mark_processing_failed(movie, error_text)
+
+        raise ValueError("Invalid status")

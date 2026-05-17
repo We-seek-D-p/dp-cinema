@@ -47,17 +47,33 @@ class MovieRepository:
         return movie
 
     def mark_processing_failed(self, movie: Movie, error_text: str) -> Movie:
+        movie.is_published = False
         movie.processing_status = ProcessingStatus.FAILED
         movie.processing_error = error_text
         movie.save(
-            update_fields=["processing_status", "processing_error", "updated_at"]
+            update_fields=[
+                "is_published",
+                "processing_status",
+                "processing_error",
+                "updated_at",
+            ]
         )
         return movie
 
-    def finalize_movie(self, movie: Movie, hls_url: str):
+    def finalize_movie(self, movie: Movie, hls_url: str) -> Movie:
         movie.hls_url = hls_url
         movie.is_published = True
-        movie.save()
+        movie.processing_status = ProcessingStatus.READY
+        movie.processing_error = ""
+        movie.save(
+            update_fields=[
+                "hls_url",
+                "is_published",
+                "processing_status",
+                "processing_error",
+                "updated_at",
+            ]
+        )
         return movie
 
 

@@ -129,16 +129,41 @@ class MovieCallbackController(APIView):
 
     def post(self, request):
         movie_id = request.data.get("movie_id")
+        callback_status = request.data.get("status")
         hls_url = request.data.get("hls_url")
+        error = request.data.get("error")
 
-        if not movie_id or not hls_url:
+        if not movie_id or not callback_status:
             return Response(
-                {"error": "Missing data"},
+                {"error": "movie_id and status are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if callback_status not in {"completed", "failed"}:
+            return Response(
+                {"error": "Invalid status"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if callback_status == "completed" and not hls_url:
+            return Response(
+                {"error": "hls_url is required for completed status"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         service = MovieUploadService()
-        result = service.finalize_processing(movie_id, hls_url)
+        try:
+            result = service.finalize_processing(
+                movie_id=movie_id,
+                status=callback_status,
+                hls_url=hls_url,
+                error=error,
+            )
+        except ValueError as exc:
+            return Response(
+                {"error": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if not result:
             return Response(
