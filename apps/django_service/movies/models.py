@@ -2,6 +2,14 @@ from django.conf import settings
 from django.db import models
 
 
+class ProcessingStatus(models.TextChoices):
+    DRAFT = "draft", "Draft"
+    QUEUED = "queued", "Queued"
+    PROCESSING = "processing", "Processing"
+    READY = "ready", "Ready"
+    FAILED = "failed", "Failed"
+
+
 class Genre(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
@@ -24,6 +32,13 @@ class Movie(models.Model):
     hls_url = models.URLField(max_length=500, blank=True)
     release_date = models.DateField(null=True, blank=True)
     is_published = models.BooleanField(default=False)
+    processing_status = models.CharField(
+        max_length=20,
+        choices=ProcessingStatus,
+        default=ProcessingStatus.DRAFT,
+    )
+    processing_task_id = models.CharField(max_length=64, blank=True)
+    processing_error = models.TextField(blank=True)
     is_premium = models.BooleanField(default=False)
     genres = models.ManyToManyField(Genre, related_name="movies", blank=True)
 
