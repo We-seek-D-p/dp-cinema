@@ -46,6 +46,20 @@ class MovieRepository:
         movie.save(update_fields=["processing_task_id", "updated_at"])
         return movie
 
+    def mark_processing_started(self, movie: Movie) -> Movie:
+        movie.is_published = False
+        movie.processing_status = ProcessingStatus.PROCESSING
+        movie.processing_error = ""
+        movie.save(
+            update_fields=[
+                "is_published",
+                "processing_status",
+                "processing_error",
+                "updated_at",
+            ]
+        )
+        return movie
+
     def mark_processing_failed(self, movie: Movie, error_text: str) -> Movie:
         movie.is_published = False
         movie.processing_status = ProcessingStatus.FAILED

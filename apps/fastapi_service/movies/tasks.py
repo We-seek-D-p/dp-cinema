@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import subprocess
+import tempfile
 
 import httpx
 from core.celery_app import celery_app
@@ -111,11 +112,12 @@ def _run_cmd(cmd: list[str]):
 
 @celery_app.task(name="movies.tasks.process_video_task")
 def process_video_task(movie_id: int, source_url: str):
-    base_dir = f"temp_movies/{movie_id}"
-    os.makedirs(base_dir, exist_ok=True)
+    base_dir = None
     working_source_url = normalize_source_url(source_url)
 
     try:
+        notify_django(movie_id, status="processing")
+        base_dir = tempfile.mkdtemp(prefix=f"movie-{movie_id}-")
         source_width, source_height, source_bitrate = get_video_meta(working_source_url)
 
         variants: list[HlsVariant] = []
@@ -267,5 +269,5 @@ def process_video_task(movie_id: int, source_url: str):
         notify_django(movie_id, status="failed", error=str(e))
         return {"status": "error", "message": str(e)}
     finally:
-        if os.path.exists(base_dir):
+        if base_dir and os.path.exists(base_dir):
             shutil.rmtree(base_dir)

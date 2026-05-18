@@ -1,5 +1,3 @@
-import asyncio
-
 from django_filters.rest_framework import DjangoFilterBackend
 from movies.api.permissions import InternalTokenPermission
 from movies.api.v1.serializers import (
@@ -98,11 +96,9 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
         service = MovieUploadService()
 
         try:
-            result = asyncio.run(
-                service.process_movie(
-                    movie_id=pk,
-                    input_url=input_url,
-                )
+            result = service.process_movie(
+                movie_id=pk,
+                input_url=input_url,
             )
 
             if "error" in result:
@@ -139,7 +135,7 @@ class MovieCallbackController(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if callback_status not in {"completed", "failed"}:
+        if callback_status not in {"processing", "completed", "failed"}:
             return Response(
                 {"error": "Invalid status"},
                 status=status.HTTP_400_BAD_REQUEST,
