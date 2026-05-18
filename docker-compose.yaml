@@ -85,6 +85,8 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-cinema_user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-cinema_password}
       - POSTGRES_PORT=5432
+      - FASTAPI_SERVICE_URL=${FASTAPI_SERVICE_URL:-http://fastapi:8001}
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-change-me-internal-token-please-use-strong-password}
       - S3_INTERNAL_ENDPOINT=${S3_INTERNAL_ENDPOINT:-http://minio:9000}
       - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
       - REDIS_URL=redis://redis:6379/0
@@ -95,6 +97,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      create-buckets:
+        condition: service_completed_successfully
     ports:
       - "8000:8000"
     networks:
@@ -109,6 +113,8 @@ services:
     env_file:
       - ./.env
     environment:
+      - DJANGO_API_URL=${DJANGO_API_URL:-http://django:8000}
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-change-me-internal-token-please-use-strong-password}
       - S3_INTERNAL_ENDPOINT=${S3_INTERNAL_ENDPOINT:-http://minio:9000}
       - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
       - REDIS_URL=redis://redis:6379/0
@@ -117,6 +123,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      create-buckets:
+        condition: service_completed_successfully
     ports:
       - "8001:8001"
     networks:
@@ -132,6 +140,8 @@ services:
     env_file:
       - ./.env
     environment:
+      - DJANGO_API_URL=${DJANGO_API_URL:-http://django:8000}
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-change-me-internal-token-please-use-strong-password}
       - S3_INTERNAL_ENDPOINT=${S3_INTERNAL_ENDPOINT:-http://minio:9000}
       - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
       - REDIS_URL=redis://redis:6379/0
@@ -140,6 +150,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      create-buckets:
+        condition: service_completed_successfully
     networks:
       - cinema-network
 
