@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import subprocess
+import tempfile
 
 import httpx
 from core.celery_app import celery_app
@@ -58,10 +59,28 @@ def get_video_meta(source_url: str):
     return width, height, bit_rate
 
 
-def notify_django(movie_id: int, hls_url: str):
+def normalize_source_url(source_url: str) -> str:
+    public_endpoint = settings.S3_PUBLIC_ENDPOINT.rstrip("/")
+    internal_endpoint = settings.S3_INTERNAL_ENDPOINT.rstrip("/")
+
+    if source_url.startswith(public_endpoint):
+        return source_url.replace(public_endpoint, internal_endpoint, 1)
+    return source_url
+
+
+def notify_django(
+    movie_id: int,
+    status: str,
+    hls_url: str | None = None,
+    error: str | None = None,
+):
     django_url = f"{settings.DJANGO_API_URL}/api/v1/movies/callback/"
 
-    payload = {"movie_id": movie_id, "hls_url": hls_url, "status": "completed"}
+    payload = {"movie_id": movie_id, "status": status}
+    if hls_url:
+        payload["hls_url"] = hls_url
+    if error:
+        payload["error"] = error
 
     headers = {"X-Internal-Token": settings.INTERNAL_SERVICE_TOKEN}
 
@@ -93,11 +112,13 @@ def _run_cmd(cmd: list[str]):
 
 @celery_app.task(name="movies.tasks.process_video_task")
 def process_video_task(movie_id: int, source_url: str):
-    base_dir = f"temp_movies/{movie_id}"
-    os.makedirs(base_dir, exist_ok=True)
+    base_dir = None
+    working_source_url = normalize_source_url(source_url)
 
     try:
-        source_width, source_height, source_bitrate = get_video_meta(source_url)
+        notify_django(movie_id, status="processing")
+        base_dir = tempfile.mkdtemp(prefix=f"movie-{movie_id}-")
+        source_width, source_height, source_bitrate = get_video_meta(working_source_url)
 
         variants: list[HlsVariant] = []
         available_profiles = [p for p in QUALITY_PROFILES if source_height >= p.height]
@@ -113,7 +134,7 @@ def process_video_task(movie_id: int, source_url: str):
             ffmpeg_cmd = [
                 "ffmpeg",
                 "-i",
-                source_url,
+                working_source_url,
                 "-vf",
                 f"scale=-2:{profile.height}",
                 "-c:v",
@@ -165,7 +186,7 @@ def process_video_task(movie_id: int, source_url: str):
         source_cmd_copy = [
             "ffmpeg",
             "-i",
-            source_url,
+            working_source_url,
             "-c:v",
             "copy",
             "-c:a",
@@ -187,7 +208,7 @@ def process_video_task(movie_id: int, source_url: str):
             source_cmd_aac = [
                 "ffmpeg",
                 "-i",
-                source_url,
+                working_source_url,
                 "-c:v",
                 "copy",
                 "-c:a",
@@ -236,15 +257,17 @@ def process_video_task(movie_id: int, source_url: str):
                 s3_client.upload_file(local_path, s3_key)
 
         final_hls_url = (
-            f"{s3_client.endpoint}/{s3_client.bucket_name}/{movie_id}/master.m3u8"
+            f"{s3_client.public_endpoint}/"
+            f"{s3_client.bucket_name}/{movie_id}/master.m3u8"
         )
-        shutil.rmtree(base_dir)
 
-        notify_django(movie_id, final_hls_url)
+        notify_django(movie_id, status="completed", hls_url=final_hls_url)
 
         return {"status": "success", "url": final_hls_url}
 
     except Exception as e:
-        if os.path.exists(base_dir):
-            shutil.rmtree(base_dir)
+        notify_django(movie_id, status="failed", error=str(e))
         return {"status": "error", "message": str(e)}
+    finally:
+        if base_dir and os.path.exists(base_dir):
+            shutil.rmtree(base_dir)

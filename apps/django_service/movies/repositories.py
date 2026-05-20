@@ -2,25 +2,92 @@ from django.db.models import QuerySet
 from django.utils import timezone
 from users.models import User
 
-from .models import Movie, Watchlist
+from .models import Movie, ProcessingStatus, Watchlist
 
 
 class MovieRepository:
     def get_published(self) -> QuerySet[Movie, Movie]:
         return Movie.objects.filter(is_published=True, deleted_at__isnull=True)
 
+    def get_active(self) -> QuerySet[Movie, Movie]:
+        return Movie.objects.filter(deleted_at__isnull=True)
+
     def get_by_id(self, movie_id: int) -> Movie | None:
         return self.get_published().filter(id=movie_id).first()
+
+    def get_by_id_internal(self, movie_id: int) -> Movie | None:
+        return self.get_active().filter(id=movie_id).first()
 
     def update_source_url(self, movie: Movie, source_url: str) -> Movie:
         movie.source_url = source_url
         movie.save()
         return movie
 
-    def finalize_movie(self, movie: Movie, hls_url: str):
+    def mark_processing_queued(self, movie: Movie, source_url: str) -> Movie:
+        movie.source_url = source_url
+        movie.is_published = False
+        movie.processing_status = ProcessingStatus.QUEUED
+        movie.processing_task_id = ""
+        movie.processing_error = ""
+        movie.save(
+            update_fields=[
+                "source_url",
+                "is_published",
+                "processing_status",
+                "processing_task_id",
+                "processing_error",
+                "updated_at",
+            ]
+        )
+        return movie
+
+    def save_processing_task_id(self, movie: Movie, task_id: str) -> Movie:
+        movie.processing_task_id = task_id
+        movie.save(update_fields=["processing_task_id", "updated_at"])
+        return movie
+
+    def mark_processing_started(self, movie: Movie) -> Movie:
+        movie.is_published = False
+        movie.processing_status = ProcessingStatus.PROCESSING
+        movie.processing_error = ""
+        movie.save(
+            update_fields=[
+                "is_published",
+                "processing_status",
+                "processing_error",
+                "updated_at",
+            ]
+        )
+        return movie
+
+    def mark_processing_failed(self, movie: Movie, error_text: str) -> Movie:
+        movie.is_published = False
+        movie.processing_status = ProcessingStatus.FAILED
+        movie.processing_error = error_text
+        movie.save(
+            update_fields=[
+                "is_published",
+                "processing_status",
+                "processing_error",
+                "updated_at",
+            ]
+        )
+        return movie
+
+    def finalize_movie(self, movie: Movie, hls_url: str) -> Movie:
         movie.hls_url = hls_url
         movie.is_published = True
-        movie.save()
+        movie.processing_status = ProcessingStatus.READY
+        movie.processing_error = ""
+        movie.save(
+            update_fields=[
+                "hls_url",
+                "is_published",
+                "processing_status",
+                "processing_error",
+                "updated_at",
+            ]
+        )
         return movie
 
 
