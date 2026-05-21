@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "django_filters",
     "users.apps.UsersConfig",
     "movies.apps.MoviesConfig",
+    "reviews.apps.ReviewsConfig",
 ]
 
 REST_FRAMEWORK = {
