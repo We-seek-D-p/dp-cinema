@@ -125,12 +125,8 @@ if RUNNING_TESTS and USE_SQLITE_FOR_TESTS:
 else:
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get("POSTGRES_DB", "cinema_db"),
-            "USER": os.environ.get("POSTGRES_USER", "cinema_user"),
-            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "cinema_password"),
-            "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
-            "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "test_db.sqlite3",
         }
     }
 
@@ -171,7 +167,7 @@ USE_TZ = True
 STATIC_URL = "static/"
 AUTH_USER_MODEL = "users.User"
 
-INTERNAL_SERVICE_TOKEN = os.environ.get("INTERNAL_SERVICE_TOKEN")
+INTERNAL_SERVICE_TOKEN = os.environ.get("INTERNAL_SERVICE_TOKEN", "fallback")
 
 if IS_PROD and not INTERNAL_SERVICE_TOKEN:
     raise RuntimeError("INTERNAL_SERVICE_TOKEN must be set in production")
@@ -204,9 +200,13 @@ else:
     MEDIA_ROOT = BASE_DIR / "media"
 
 FASTAPI_SERVICE_URL = os.environ.get("FASTAPI_SERVICE_URL", "http://localhost:8001")
+FLASK_SERVICE_URL = os.environ.get("FLASK_SERVICE_URL", "http://localhost:5000")
 
 if IS_PROD and not FASTAPI_SERVICE_URL:
     raise RuntimeError("FASTAPI_SERVICE_URL must be set in production")
+
+if IS_PROD and not FLASK_SERVICE_URL:
+    raise RuntimeError("FLASK_SERVICE_URL must be set in production")
 
 if IS_PROD and not INTERNAL_SERVICE_TOKEN:
     raise RuntimeError("INTERNAL_SERVICE_TOKEN must be set in production")
