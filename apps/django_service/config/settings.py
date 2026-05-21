@@ -125,8 +125,12 @@ if RUNNING_TESTS and USE_SQLITE_FOR_TESTS:
 else:
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "test_db.sqlite3",
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("POSTGRES_DB", "cinema_db"),
+            "USER": os.environ.get("POSTGRES_USER", "cinema_user"),
+            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "cinema_password"),
+            "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+            "PORT": os.environ.get("POSTGRES_PORT", "5432"),
         }
     }
 
