@@ -61,3 +61,20 @@ def token_required(f):
         return f(*args, **kwargs)
 
     return decorated
+
+
+def internal_token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        internal_token = request.headers.get("X-Internal-Token")
+        expected_token = settings.INTERNAL_SERVICE_TOKEN
+
+        if not internal_token:
+            raise ForbiddenError("Отсутствует X-Internal-Token", status_code=403)
+
+        if internal_token != expected_token:
+            raise ForbiddenError("Неверный X-Internal-Token", status_code=403)
+
+        return f(*args, **kwargs)
+
+    return decorated
