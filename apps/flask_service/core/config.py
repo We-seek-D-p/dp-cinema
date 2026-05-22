@@ -9,6 +9,7 @@ class Settings(BaseSettings):
 
     DJANGO_API_URL: str = "http://localhost:8000"
     INTERNAL_SERVICE_TOKEN: str
+    DJANGO_SECRET_KEY: str
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
