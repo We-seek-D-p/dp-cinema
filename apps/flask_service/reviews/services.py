@@ -101,9 +101,8 @@ class ReviewService:
         if review.user_id != user_id:
             raise ForbiddenError("Вы не можете редактировать чужой отзыв")
 
-        updated_review = self.repo.update_review_fields(review, text, rating)
-
         try:
+            updated_review = self.repo.update_review_fields(review, text, rating)
             _notify_moderation(updated_review)
             db.session.commit()
             db.session.refresh(updated_review)
