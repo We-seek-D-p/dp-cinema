@@ -1,7 +1,7 @@
 import httpx
 from core.config import settings
 
-from reviews.models import Review
+from reviews.models import Review, db
 
 from .errors import (
     ConflictError,
@@ -67,16 +67,23 @@ class ReviewService:
         if not _verify_movie_exists(movie_id):
             raise NotFoundError("Фильм не найден в каталоге Django")
 
-        return self.repo.create_with_moderation(
-            data={
-                "user_id": user_id,
-                "movie_id": movie_id,
-                "text": text,
-                "rating": rating,
-                "status": "pending",
-            },
-            notify_func=_notify_moderation,
-        )
+        try:
+            review = self.repo.create(
+                {
+                    "user_id": user_id,
+                    "movie_id": movie_id,
+                    "text": text,
+                    "rating": rating,
+                    "status": "pending",
+                }
+            )
+            _notify_moderation(review)
+            db.session.commit()
+            db.session.refresh(review)
+            return review
+        except Exception:
+            db.session.rollback()
+            raise
 
     def update_review(
         self,
@@ -88,13 +95,22 @@ class ReviewService:
         if text is None and rating is None:
             raise ValidationError("Не передано ни одного поля для обновления")
 
-        return self.repo.update_with_moderation(
-            review_id=review_id,
-            user_id=user_id,
-            text=text,
-            rating=rating,
-            notify_func=_notify_moderation,
-        )
+        review = self.repo.get_by_id(review_id)
+        if not review:
+            raise NotFoundError("Рецензия не найдена")
+        if review.user_id != user_id:
+            raise ForbiddenError("Вы не можете редактировать чужой отзыв")
+
+        updated_review = self.repo.update_review_fields(review, text, rating)
+
+        try:
+            _notify_moderation(updated_review)
+            db.session.commit()
+            db.session.refresh(updated_review)
+            return updated_review
+        except Exception:
+            db.session.rollback()
+            raise
 
     def change_review_status(self, review_id: int, status: str):
         review = self.repo.get_by_id(review_id)

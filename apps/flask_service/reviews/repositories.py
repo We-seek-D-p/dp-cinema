@@ -1,6 +1,5 @@
 from datetime import UTC, datetime
 
-from .errors import ForbiddenError, NotFoundError
 from .models import Review, db
 
 
@@ -26,17 +25,6 @@ class ReviewRepository:
         db.session.flush()
         return review
 
-    def create_with_moderation(self, data: dict, notify_func) -> Review:
-        try:
-            review = self.create(data)
-            notify_func(review)
-            db.session.commit()
-            db.session.refresh(review)
-            return review
-        except Exception:
-            db.session.rollback()
-            raise
-
     def update_review_fields(
         self, review: Review, text: str | None = None, rating: int | None = None
     ) -> Review:
@@ -48,38 +36,6 @@ class ReviewRepository:
         review.updated_at = datetime.now(UTC)
         db.session.flush()
         return review
-
-    def update_with_moderation(
-        self,
-        review_id: int,
-        user_id: int,
-        notify_func,
-        text: str | None = None,
-        rating: int | None = None,
-    ) -> Review:
-        review = self.get_by_id(review_id)
-        if not review:
-            raise NotFoundError("Рецензия не найдена")
-        if review.user_id != user_id:
-            raise ForbiddenError("Вы не можете редактировать чужой отзыв")
-
-        if text is not None:
-            review.text = text
-        if rating is not None:
-            review.rating = rating
-        review.status = "pending"
-        review.updated_at = datetime.now(UTC)
-
-        db.session.flush()
-
-        try:
-            notify_func(review)
-            db.session.commit()
-            db.session.refresh(review)
-            return review
-        except Exception:
-            db.session.rollback()
-            raise
 
     def update(self, review: Review, data: dict) -> Review:
         allowed_keys = {"text", "rating", "status"}
