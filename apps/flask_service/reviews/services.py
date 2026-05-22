@@ -86,20 +86,30 @@ class ReviewService:
             raise
 
     def update_review(
-        self, review_id: int, user_id: int, text: str, rating: int
+        self,
+        review_id: int,
+        user_id: int,
+        text: str | None = None,
+        rating: int | None = None,
     ) -> Review:
+        if text is None and rating is None:
+            raise ValidationError("Не передано ни одного поля для обновления")
+
         review = self.repo.get_by_id(review_id)
         if not review:
             raise NotFoundError("Рецензия не найдена")
-
         if review.user_id != user_id:
             raise ForbiddenError("Вы не можете редактировать чужой отзыв")
 
-        update_data = {"text": text, "rating": rating, "status": "pending"}
-        updated_review = self.repo.update(review, update_data)
-
-        _notify_moderation(updated_review)
-        return updated_review
+        try:
+            updated_review = self.repo.update_review_fields(review, text, rating)
+            _notify_moderation(updated_review)
+            db.session.commit()
+            db.session.refresh(updated_review)
+            return updated_review
+        except Exception:
+            db.session.rollback()
+            raise
 
     def change_review_status(self, review_id: int, status: str):
         review = self.repo.get_by_id(review_id)
