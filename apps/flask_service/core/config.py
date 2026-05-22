@@ -16,7 +16,10 @@ class Settings(BaseSettings):
     )
 
     @field_validator(
-        "SQLALCHEMY_DATABASE_URI", "DJANGO_API_URL", "INTERNAL_SERVICE_TOKEN"
+        "SQLALCHEMY_DATABASE_URI",
+        "DJANGO_API_URL",
+        "INTERNAL_SERVICE_TOKEN",
+        "DJANGO_SECRET_KEY",
     )
     @classmethod
     def validate_non_empty(cls, v: str, info: ValidationInfo) -> str:
