@@ -1,4 +1,3 @@
-from datetime import UTC, datetime
 
 import httpx
 from core.config import settings
@@ -94,28 +93,22 @@ class ReviewService:
         text: str | None = None,
         rating: int | None = None,
     ) -> Review:
+        if text is None and rating is None:
+            raise ValidationError("Не передано ни одного поля для обновления")
+
         review = self.repo.get_by_id(review_id)
         if not review:
             raise NotFoundError("Рецензия не найдена")
-
         if review.user_id != user_id:
             raise ForbiddenError("Вы не можете редактировать чужой отзыв")
 
-        if text is not None:
-            review.text = text
-        if rating is not None:
-            review.rating = rating
-        review.status = "pending"
-        review.updated_at = datetime.now(UTC)
-
-        db.session.add(review)
-        db.session.flush()
+        updated_review = self.repo.update_review_fields(review, text, rating)
 
         try:
-            _notify_moderation(review)
+            _notify_moderation(updated_review)
             db.session.commit()
-            db.session.refresh(review)
-            return review
+            db.session.refresh(updated_review)
+            return updated_review
         except Exception:
             db.session.rollback()
             raise

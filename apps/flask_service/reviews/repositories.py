@@ -25,6 +25,18 @@ class ReviewRepository:
         db.session.flush()
         return review
 
+    def update_review_fields(
+        self, review: Review, text: str | None = None, rating: int | None = None
+    ) -> Review:
+        if text is not None:
+            review.text = text
+        if rating is not None:
+            review.rating = rating
+        review.status = "pending"
+        review.updated_at = datetime.now(UTC)
+        db.session.flush()
+        return review
+
     def update(self, review: Review, data: dict) -> Review:
         allowed_keys = {"text", "rating", "status"}
         for key, value in data.items():
