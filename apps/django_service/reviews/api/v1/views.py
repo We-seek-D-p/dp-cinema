@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from movies.api.permissions import InternalTokenPermission
 from reviews.api.v1.serializers import ReviewIncomingWebhookSerializer
 from reviews.services import ReviewModerationService
+from movies.errors import MovieNotFoundError
 
 
 class ReviewModerationController(APIView):
@@ -12,15 +13,10 @@ class ReviewModerationController(APIView):
 
     def post(self, request) -> Response:
         serializer = ReviewIncomingWebhookSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         try:
-            self.service.handle_incoming_review(serializer.validated_data)
-            return Response(
-                {"status": "success"},
-                status=status.HTTP_201_CREATED
-            )
-        except Exception as e:
-            return Response(
-                {"error": "Internal server error", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            review = self.service.handle_incoming_review(serializer.validated_data)
+            return Response({"review_id": review.id}, status=status.HTTP_200_OK)
+        except MovieNotFoundError as exc:
+            return Response(str(exc), status=status.HTTP_404_NOT_FOUND)

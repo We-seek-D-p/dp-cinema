@@ -23,7 +23,15 @@ class ReviewAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ("id", "user_id", "created_at", "updated_at")
+            return (
+                "id",
+                "movie",
+                "user_id",
+                "text",
+                "rating",
+                "created_at",
+                "updated_at",
+            )
         return ("created_at", "updated_at")
 
     def save_model(self, request, obj, form, change) -> None:
@@ -33,9 +41,10 @@ class ReviewAdmin(admin.ModelAdmin):
                 if not success:
                     self.message_user(
                         request,
-                        f"Статус отзыва {obj.id} изменен в Django, но не синхронизирован с Flask.",
-                        messages.WARNING,
+                        f"Ошибка: Не удалось обновить статус отзыва {obj.id} во Flask - изменения отменены.",
+                        messages.ERROR,
                     )
+                    return
         super().save_model(request, obj, form, change)
 
     def approve_reviews(self, request, queryset):
@@ -49,15 +58,15 @@ class ReviewAdmin(admin.ModelAdmin):
         self.message_user(
             request,
             ngettext(
-                "%d рецензия успешно одобрена и синхронизирована с Flask.",
-                "%d рецензий успешно одобрено и синхронизировано с Flask.",
+                "%d отзыв одобрен и синхронизирован с Flask.",
+                "%d отзывов одобрено и синхронизировано с Flask.",
                 success_count,
             )
             % success_count,
             messages.SUCCESS,
         )
 
-    approve_reviews.description = "Одобрить выбранные рецензии"
+    approve_reviews.description = "Одобрить выбранные отзывы"
 
     def hide_reviews(self, request, queryset):
         success_count = 0
@@ -70,12 +79,12 @@ class ReviewAdmin(admin.ModelAdmin):
         self.message_user(
             request,
             ngettext(
-                "%d рецензия успешно скрыта и синхронизирована с Flask.",
-                "%d рецензий успешно скрыто и синхронизировано с Flask.",
+                "%d отзыв скрыт и синхронизирован с Flask.",
+                "%d отзывов скрыто и синхронизировано с Flask.",
                 success_count,
             )
             % success_count,
             messages.SUCCESS,
         )
 
-    hide_reviews.description = "Скрыть выбранные рецензии"
+    hide_reviews.description = "Скрыть выбранные отзывы"
