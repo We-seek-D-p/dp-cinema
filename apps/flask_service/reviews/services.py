@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 import httpx
 from core.config import settings
 
@@ -86,7 +88,11 @@ class ReviewService:
             raise
 
     def update_review(
-        self, review_id: int, user_id: int, text: str, rating: int
+        self,
+        review_id: int,
+        user_id: int,
+        text: str | None = None,
+        rating: int | None = None,
     ) -> Review:
         review = self.repo.get_by_id(review_id)
         if not review:
@@ -95,11 +101,24 @@ class ReviewService:
         if review.user_id != user_id:
             raise ForbiddenError("Вы не можете редактировать чужой отзыв")
 
-        update_data = {"text": text, "rating": rating, "status": "pending"}
-        updated_review = self.repo.update(review, update_data)
+        if text is not None:
+            review.text = text
+        if rating is not None:
+            review.rating = rating
+        review.status = "pending"
+        review.updated_at = datetime.now(UTC)
 
-        _notify_moderation(updated_review)
-        return updated_review
+        db.session.add(review)
+        db.session.flush()
+
+        try:
+            _notify_moderation(review)
+            db.session.commit()
+            db.session.refresh(review)
+            return review
+        except Exception:
+            db.session.rollback()
+            raise
 
     def change_review_status(self, review_id: int, status: str):
         review = self.repo.get_by_id(review_id)
