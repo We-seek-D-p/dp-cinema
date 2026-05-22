@@ -52,17 +52,14 @@ def delete_review(review_id, user_id):
 @internal_token_required
 def change_status(review_id):
     data = request.json
-    status = data.get("status")
-
-    valid_statuses = ["pending", "approved", "hidden"]
-    if status not in valid_statuses:
+    if not data:
         return jsonify(
-            {
-                "status": "error",
-                "message": f"Недопустимый статус. "
-                f"Допустимые значения: {valid_statuses}",
-            }
+            {"status": "error", "message": "Тело запроса не может быть пустым"}
         ), 400
+
+    status = data.get("status")
+    if not status:
+        return jsonify({"status": "error", "message": "Поле status обязательно"}), 400
 
     updated_review = service.change_review_status(review_id, status)
     return jsonify({"status": "success", "new_status": updated_review.status}), 200

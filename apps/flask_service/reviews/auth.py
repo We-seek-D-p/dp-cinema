@@ -1,3 +1,4 @@
+import hmac
 from functools import wraps
 
 import jwt
@@ -72,7 +73,7 @@ def internal_token_required(f):
         if not internal_token:
             raise ForbiddenError("Отсутствует X-Internal-Token", status_code=403)
 
-        if internal_token != expected_token:
+        if not hmac.compare_digest(internal_token, expected_token):
             raise ForbiddenError("Неверный X-Internal-Token", status_code=403)
 
         return f(*args, **kwargs)
