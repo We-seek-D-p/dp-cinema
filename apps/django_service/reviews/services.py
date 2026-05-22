@@ -1,6 +1,6 @@
 import httpx
 from django.conf import settings
-from rest_framework.exceptions import ValidationError
+from movies.errors import MovieNotFoundError
 from movies.repositories import MovieRepository
 from reviews.models import Review, ReviewStatus
 from reviews.repositories import ReviewRepository
@@ -33,7 +33,7 @@ class ReviewModerationService:
         movie_exists = self.movie_repo.get_active().filter(id=movie_id).exists()
 
         if not movie_exists:
-            raise ValidationError({"movie_id": "Фильм не найден в каталоге Django"})
+            raise MovieNotFoundError({"movie_id": "Фильм не найден в каталоге Django"})
 
         review_data = {
             "movie_id": movie_id,
