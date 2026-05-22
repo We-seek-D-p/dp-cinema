@@ -19,4 +19,4 @@ class ReviewModerationController(APIView):
             review = self.service.handle_incoming_review(serializer.validated_data)
             return Response({"review_id": review.id}, status=status.HTTP_200_OK)
         except MovieNotFoundError as exc:
-            return Response(str(exc), status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
