@@ -1,7 +1,7 @@
 import httpx
 from core.config import settings
 
-from reviews.models import Review
+from reviews.models import Review, db
 
 from .errors import (
     ConflictError,
@@ -67,18 +67,23 @@ class ReviewService:
         if not _verify_movie_exists(movie_id):
             raise NotFoundError("Фильм не найден в каталоге Django")
 
-        review = self.repo.create(
-            {
-                "user_id": user_id,
-                "movie_id": movie_id,
-                "text": text,
-                "rating": rating,
-                "status": "pending",
-            }
-        )
-
-        _notify_moderation(review)
-        return review
+        try:
+            review = self.repo.create(
+                {
+                    "user_id": user_id,
+                    "movie_id": movie_id,
+                    "text": text,
+                    "rating": rating,
+                    "status": "pending",
+                }
+            )
+            _notify_moderation(review)
+            db.session.commit()
+            db.session.refresh(review)
+            return review
+        except Exception:
+            db.session.rollback()
+            raise
 
     def update_review(
         self, review_id: int, user_id: int, text: str, rating: int
