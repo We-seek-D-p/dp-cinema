@@ -22,8 +22,7 @@ class ReviewRepository:
     def create(self, data: dict) -> Review:
         review = Review(**data)
         db.session.add(review)
-        db.session.commit()
-        db.session.refresh(review)
+        db.session.flush()
         return review
 
     def update(self, review: Review, data: dict) -> Review:
