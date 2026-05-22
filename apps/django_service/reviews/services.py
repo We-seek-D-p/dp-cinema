@@ -9,7 +9,7 @@ from reviews.repositories import ReviewRepository
 class FlaskReviewsClient:
     @staticmethod
     def send_status_update(review_id: int, status: str) -> bool:
-        url = f"{settings.FLASK_SERVICE_URL}/api/v1/internal/reviews/{review_id}/status"
+        url = f"{settings.FLASK_SERVICE_URL}/api/v1/reviews/internal/{review_id}/status"
         headers = {"X-Internal-Token": settings.INTERNAL_SERVICE_TOKEN}
         payload = {"status": status}
         try:
