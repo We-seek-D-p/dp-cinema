@@ -85,7 +85,8 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-cinema_user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-cinema_password}
       - POSTGRES_PORT=5432
-      - FASTAPI_SERVICE_URL=${FASTAPI_SERVICE_URL:-http://fastapi:8001}
+      - FASTAPI_INTERNAL_URL=${FASTAPI_INTERNAL_URL:-http://fastapi:8001}
+      - FLASK_INTERNAL_URL=${FLASK_INTERNAL_URL:-http://flask:5001}
       - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-change-me-internal-token-please-use-strong-password}
       - S3_INTERNAL_ENDPOINT=${S3_INTERNAL_ENDPOINT:-http://minio:9000}
       - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
