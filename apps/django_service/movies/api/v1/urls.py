@@ -1,7 +1,8 @@
 from django.urls import path
 from movies.api.v1.views import (
     GenreViewSet,
-    MovieCallbackController,
+    MovieExistsController,
+    MovieProcessingCallbackController,
     MovieViewSet,
     WatchListController,
 )
@@ -14,7 +15,14 @@ movies_router.register("", MovieViewSet, basename="movies")
 movie_urlpatterns = movies_router.urls
 
 movie_callback_urlpatterns = [
-    path("callback/", MovieCallbackController.as_view(), name="movie-callback"),
+    path(
+        "processing/callback/",
+        MovieProcessingCallbackController.as_view(),
+        name="movie-processing-callback",
+    ),
+    path(
+        "<int:movie_id>/exists/", MovieExistsController.as_view(), name="movie-exists"
+    ),
 ]
 
 watchlist_urlpatterns = [

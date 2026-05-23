@@ -41,7 +41,10 @@ class ReviewAdmin(admin.ModelAdmin):
                 if not success:
                     self.message_user(
                         request,
-                        f"Ошибка: Не удалось обновить статус отзыва {obj.id} во Flask - изменения отменены.",
+                        (
+                            "Ошибка: Не удалось обновить статус "
+                            f"отзыва {obj.id} во Flask - изменения отменены."
+                        ),
                         messages.ERROR,
                     )
                     return

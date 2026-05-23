@@ -9,17 +9,19 @@ from reviews.repositories import ReviewRepository
 class FlaskReviewsClient:
     @staticmethod
     def send_status_update(review_id: int, status: str) -> bool:
-        url = f"{settings.FLASK_SERVICE_URL}/api/v1/reviews/internal/{review_id}/status"
+        url = (
+            f"{settings.FLASK_INTERNAL_URL}/api/v1/internal/reviews/{review_id}/status"
+        )
         headers = {"X-Internal-Token": settings.INTERNAL_SERVICE_TOKEN}
         payload = {"status": status}
         try:
             with httpx.Client(timeout=3.0) as client:
                 response = client.patch(url, json=payload, headers=headers)
-                
+
                 if response.status_code == 200:
                     return True
                 return False
-        except httpx.RequestError as exc:
+        except httpx.RequestError:
             return False
 
 

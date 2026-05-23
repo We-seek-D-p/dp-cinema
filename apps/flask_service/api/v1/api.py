@@ -3,7 +3,8 @@ from reviews.auth import internal_token_required, token_required
 from reviews.schemas import ReviewCreateSchema, ReviewPublicSchema, ReviewUpdateSchema
 from reviews.services import ReviewService
 
-api_bp = Blueprint("api", __name__)
+public_bp = Blueprint("reviews_public", __name__)
+internal_bp = Blueprint("reviews_internal", __name__)
 service = ReviewService()
 
 create_schema = ReviewCreateSchema()
@@ -12,7 +13,7 @@ public_schema = ReviewPublicSchema()
 list_schema = ReviewPublicSchema(many=True)
 
 
-@api_bp.route("/movies/<int:movie_id>/reviews", methods=["POST"])
+@public_bp.route("/movies/<int:movie_id>/reviews", methods=["POST"])
 @token_required
 def add_review(movie_id, user_id):
     data = create_schema.load(request.json)
@@ -22,13 +23,13 @@ def add_review(movie_id, user_id):
     return jsonify(public_schema.dump(review)), 201
 
 
-@api_bp.route("/movies/<int:movie_id>/reviews", methods=["GET"])
+@public_bp.route("/movies/<int:movie_id>/reviews", methods=["GET"])
 def get_reviews(movie_id):
     reviews = service.get_movie_reviews(movie_id)
     return jsonify(list_schema.dump(reviews)), 200
 
 
-@api_bp.route("/reviews/<int:review_id>", methods=["PUT"])
+@public_bp.route("/reviews/<int:review_id>", methods=["PUT"])
 @token_required
 def update_review(review_id, user_id):
     data = update_schema.load(request.json, partial=True)
@@ -41,14 +42,14 @@ def update_review(review_id, user_id):
     return jsonify(public_schema.dump(review)), 200
 
 
-@api_bp.route("/reviews/<int:review_id>", methods=["DELETE"])
+@public_bp.route("/reviews/<int:review_id>", methods=["DELETE"])
 @token_required
 def delete_review(review_id, user_id):
     service.delete_review(review_id, user_id)
     return "", 204
 
 
-@api_bp.route("/internal/reviews/<int:review_id>/status", methods=["PATCH"])
+@internal_bp.route("/reviews/<int:review_id>/status", methods=["PATCH"])
 @internal_token_required
 def change_status(review_id):
     data = request.get_json(silent=True)

@@ -59,22 +59,15 @@ def get_video_meta(source_url: str):
     return width, height, bit_rate
 
 
-def normalize_source_url(source_url: str) -> str:
-    public_endpoint = settings.S3_PUBLIC_ENDPOINT.rstrip("/")
-    internal_endpoint = settings.S3_INTERNAL_ENDPOINT.rstrip("/")
-
-    if source_url.startswith(public_endpoint):
-        return source_url.replace(public_endpoint, internal_endpoint, 1)
-    return source_url
-
-
 def notify_django(
     movie_id: int,
     status: str,
     hls_url: str | None = None,
     error: str | None = None,
 ):
-    django_url = f"{settings.DJANGO_API_URL}/api/v1/movies/callback/"
+    django_url = (
+        f"{settings.DJANGO_INTERNAL_URL}/api/v1/internal/movies/processing/callback/"
+    )
 
     payload = {"movie_id": movie_id, "status": status}
     if hls_url:
@@ -113,7 +106,7 @@ def _run_cmd(cmd: list[str]):
 @celery_app.task(name="movies.tasks.process_video_task")
 def process_video_task(movie_id: int, source_url: str):
     base_dir = None
-    working_source_url = normalize_source_url(source_url)
+    working_source_url = source_url
 
     try:
         notify_django(movie_id, status="processing")

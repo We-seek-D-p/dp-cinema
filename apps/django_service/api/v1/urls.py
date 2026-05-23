@@ -10,8 +10,12 @@ app_name = "v1"
 
 urlpatterns = [
     path("users/", include("users.api.v1.urls")),
-    path("movies/", include((movie_callback_urlpatterns, "movies-callback"))),
+    path("internal/movies/", include((movie_callback_urlpatterns, "movies-callback"))),
     path("movies/", include((movie_urlpatterns, "movies"))),
     path("watchlist/", include((watchlist_urlpatterns, "watchlist"))),
-    path("reviews/moderation/", ReviewModerationController.as_view(), name="review-moderation"),
+    path(
+        "internal/reviews/moderation/",
+        ReviewModerationController.as_view(),
+        name="review-moderation",
+    ),
 ]

@@ -13,10 +13,16 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def _normalize_url(value: str | None, default: str) -> str:
+    return (value or default).strip().rstrip("/")
+
 
 DJANGO_ENV = os.environ.get("DJANGO_ENV", "dev").strip().lower()
 
@@ -171,13 +177,19 @@ USE_TZ = True
 STATIC_URL = "static/"
 AUTH_USER_MODEL = "users.User"
 
-INTERNAL_SERVICE_TOKEN = os.environ.get("INTERNAL_SERVICE_TOKEN", "fallback")
+INTERNAL_SERVICE_TOKEN = os.environ.get("INTERNAL_SERVICE_TOKEN")
+if RUNNING_TESTS and not INTERNAL_SERVICE_TOKEN:
+    INTERNAL_SERVICE_TOKEN = "test-internal-token"  # noqa: S105
 
-if IS_PROD and not INTERNAL_SERVICE_TOKEN:
-    raise RuntimeError("INTERNAL_SERVICE_TOKEN must be set in production")
+if not INTERNAL_SERVICE_TOKEN:
+    raise RuntimeError("INTERNAL_SERVICE_TOKEN must be set")
 
-S3_INTERNAL_ENDPOINT = os.environ.get("S3_INTERNAL_ENDPOINT", "http://minio:9000")
-S3_PUBLIC_ENDPOINT = os.environ.get("S3_PUBLIC_ENDPOINT", "http://localhost:9000")
+S3_INTERNAL_ENDPOINT = _normalize_url(
+    os.environ.get("S3_INTERNAL_ENDPOINT"), "http://minio:9000"
+)
+S3_PUBLIC_ENDPOINT = _normalize_url(
+    os.environ.get("S3_PUBLIC_ENDPOINT"), "http://localhost:9000"
+)
 
 if os.environ.get("USE_S3", "False") == "True":
     AWS_ACCESS_KEY_ID = os.environ.get("S3_ACCESS_KEY", "minioadmin")
@@ -191,9 +203,8 @@ if os.environ.get("USE_S3", "False") == "True":
     AWS_S3_SIGNATURE_VERSION = "s3v4"
 
     if S3_PUBLIC_ENDPOINT:
-        s3_public_host = S3_PUBLIC_ENDPOINT.replace("http://", "").replace(
-            "https://", ""
-        )
+        parsed_public = urlparse(S3_PUBLIC_ENDPOINT)
+        s3_public_host = parsed_public.netloc or parsed_public.path
         AWS_S3_CUSTOM_DOMAIN = f"{s3_public_host}/{AWS_STORAGE_BUCKET_NAME}"
         MEDIA_URL = f"{S3_PUBLIC_ENDPOINT}/{AWS_STORAGE_BUCKET_NAME}/"
 
@@ -203,14 +214,14 @@ else:
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
 
-FASTAPI_SERVICE_URL = os.environ.get("FASTAPI_SERVICE_URL", "http://localhost:8001")
-FLASK_SERVICE_URL = os.environ.get("FLASK_SERVICE_URL", "http://localhost:5000")
+fastapi_internal_url_raw = os.environ.get("FASTAPI_INTERNAL_URL")
+flask_internal_url_raw = os.environ.get("FLASK_INTERNAL_URL")
 
-if IS_PROD and not FASTAPI_SERVICE_URL:
-    raise RuntimeError("FASTAPI_SERVICE_URL must be set in production")
+if IS_PROD and not fastapi_internal_url_raw:
+    raise RuntimeError("FASTAPI_INTERNAL_URL must be set in production")
 
-if IS_PROD and not FLASK_SERVICE_URL:
-    raise RuntimeError("FLASK_SERVICE_URL must be set in production")
+if IS_PROD and not flask_internal_url_raw:
+    raise RuntimeError("FLASK_INTERNAL_URL must be set in production")
 
-if IS_PROD and not INTERNAL_SERVICE_TOKEN:
-    raise RuntimeError("INTERNAL_SERVICE_TOKEN must be set in production")
+FASTAPI_INTERNAL_URL = _normalize_url(fastapi_internal_url_raw, "http://localhost:8001")
+FLASK_INTERNAL_URL = _normalize_url(flask_internal_url_raw, "http://localhost:5001")
