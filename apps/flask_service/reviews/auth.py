@@ -1,3 +1,4 @@
+import hmac
 from functools import wraps
 
 import jwt
@@ -58,6 +59,23 @@ def token_required(f):
         token = _extract_token_from_header(auth_header)
         user_id = _decode_and_validate_jwt(token)
         kwargs["user_id"] = user_id
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+def internal_token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        internal_token = request.headers.get("X-Internal-Token")
+        expected_token = settings.INTERNAL_SERVICE_TOKEN
+
+        if not internal_token:
+            raise ForbiddenError("Отсутствует X-Internal-Token", status_code=403)
+
+        if not hmac.compare_digest(internal_token, expected_token):
+            raise ForbiddenError("Неверный X-Internal-Token", status_code=403)
+
         return f(*args, **kwargs)
 
     return decorated

@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from reviews.auth import token_required
+from reviews.auth import internal_token_required, token_required
 from reviews.schemas import ReviewCreateSchema, ReviewPublicSchema, ReviewUpdateSchema
 from reviews.services import ReviewService
 
@@ -16,7 +16,6 @@ list_schema = ReviewPublicSchema(many=True)
 @token_required
 def add_review(movie_id, user_id):
     data = create_schema.load(request.json)
-
     review = service.create_review(
         user_id=user_id, movie_id=movie_id, text=data["text"], rating=data["rating"]
     )
@@ -33,7 +32,6 @@ def get_reviews(movie_id):
 @token_required
 def update_review(review_id, user_id):
     data = update_schema.load(request.json, partial=True)
-
     review = service.update_review(
         review_id=review_id,
         user_id=user_id,
@@ -51,15 +49,17 @@ def delete_review(review_id, user_id):
 
 
 @api_bp.route("/internal/reviews/<int:review_id>/status", methods=["PATCH"])
+@internal_token_required
 def change_status(review_id):
-    from core.config import settings
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify(
+            {"status": "error", "message": "Тело запроса не может быть пустым"}
+        ), 400
 
-    token = request.headers.get("X-Internal-Token")
-    if token != settings.INTERNAL_SERVICE_TOKEN:
-        return jsonify({"status": "error", "message": "Forbidden"}), 403
-
-    data = request.json
     status = data.get("status")
+    if not status:
+        return jsonify({"status": "error", "message": "Поле status обязательно"}), 400
 
     updated_review = service.change_review_status(review_id, status)
     return jsonify({"status": "success", "new_status": updated_review.status}), 200
