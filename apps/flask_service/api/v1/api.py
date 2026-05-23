@@ -51,7 +51,7 @@ def delete_review(review_id, user_id):
 @api_bp.route("/internal/reviews/<int:review_id>/status", methods=["PATCH"])
 @internal_token_required
 def change_status(review_id):
-    data = request.json
+    data = request.get_json(silent=True)
     if not data:
         return jsonify(
             {"status": "error", "message": "Тело запроса не может быть пустым"}
