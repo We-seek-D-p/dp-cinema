@@ -1,4 +1,4 @@
-from api.v1.api import api_bp
+from api.v1.api import internal_bp, public_bp
 from core.config import settings
 from flask import Flask
 from flask_migrate import Migrate
@@ -18,7 +18,8 @@ def create_app():
 
     register_error_handlers(app)
 
-    app.register_blueprint(api_bp, url_prefix="/api/v1/reviews")
+    app.register_blueprint(public_bp, url_prefix="/api/v1/reviews")
+    app.register_blueprint(internal_bp, url_prefix="/api/v1/internal")
 
     return app
 

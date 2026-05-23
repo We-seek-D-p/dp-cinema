@@ -14,7 +14,7 @@ from .repositories import ReviewRepository
 
 
 def _verify_movie_exists(movie_id: int) -> bool:
-    url = f"{settings.DJANGO_API_URL}/api/v1/movies/{movie_id}/"
+    url = f"{settings.DJANGO_INTERNAL_URL}/api/v1/internal/movies/{movie_id}/"
     headers = {"X-Internal-Token": settings.INTERNAL_SERVICE_TOKEN}
     try:
         with httpx.Client(timeout=3.0) as client:
@@ -30,7 +30,7 @@ def _verify_movie_exists(movie_id: int) -> bool:
 
 
 def _notify_moderation(review) -> None:
-    url = f"{settings.DJANGO_API_URL}/api/v1/reviews/moderation/"
+    url = f"{settings.DJANGO_INTERNAL_URL}/api/v1/internal/reviews/moderation/"
     headers = {"X-Internal-Token": settings.INTERNAL_SERVICE_TOKEN}
 
     payload = {
