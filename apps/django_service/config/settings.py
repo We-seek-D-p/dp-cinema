@@ -19,6 +19,11 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def _normalize_url(value: str | None, default: str) -> str:
+    return (value or default).strip().rstrip("/")
+
+
 DJANGO_ENV = os.environ.get("DJANGO_ENV", "dev").strip().lower()
 
 IS_DEV = DJANGO_ENV == "dev"
@@ -173,12 +178,18 @@ STATIC_URL = "static/"
 AUTH_USER_MODEL = "users.User"
 
 INTERNAL_SERVICE_TOKEN = os.environ.get("INTERNAL_SERVICE_TOKEN")
+if RUNNING_TESTS and not INTERNAL_SERVICE_TOKEN:
+    INTERNAL_SERVICE_TOKEN = "test-internal-token"  # noqa: S105
 
 if not INTERNAL_SERVICE_TOKEN:
     raise RuntimeError("INTERNAL_SERVICE_TOKEN must be set")
 
-S3_INTERNAL_ENDPOINT = os.environ.get("S3_INTERNAL_ENDPOINT", "http://minio:9000")
-S3_PUBLIC_ENDPOINT = os.environ.get("S3_PUBLIC_ENDPOINT", "http://localhost:9000")
+S3_INTERNAL_ENDPOINT = _normalize_url(
+    os.environ.get("S3_INTERNAL_ENDPOINT"), "http://minio:9000"
+)
+S3_PUBLIC_ENDPOINT = _normalize_url(
+    os.environ.get("S3_PUBLIC_ENDPOINT"), "http://localhost:9000"
+)
 
 if os.environ.get("USE_S3", "False") == "True":
     AWS_ACCESS_KEY_ID = os.environ.get("S3_ACCESS_KEY", "minioadmin")
@@ -203,14 +214,15 @@ else:
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
 
-FASTAPI_INTERNAL_URL = os.environ.get("FASTAPI_INTERNAL_URL")
-FLASK_INTERNAL_URL = os.environ.get("FLASK_INTERNAL_URL")
+FASTAPI_INTERNAL_URL = _normalize_url(
+    os.environ.get("FASTAPI_INTERNAL_URL"), "http://localhost:8001"
+)
+FLASK_INTERNAL_URL = _normalize_url(
+    os.environ.get("FLASK_INTERNAL_URL"), "http://localhost:5001"
+)
 
 if IS_PROD and not FASTAPI_INTERNAL_URL:
     raise RuntimeError("FASTAPI_INTERNAL_URL must be set in production")
 
 if IS_PROD and not FLASK_INTERNAL_URL:
     raise RuntimeError("FLASK_INTERNAL_URL must be set in production")
-
-FASTAPI_INTERNAL_URL = FASTAPI_INTERNAL_URL or "http://localhost:8001"
-FLASK_INTERNAL_URL = FLASK_INTERNAL_URL or "http://localhost:5001"

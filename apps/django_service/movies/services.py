@@ -45,7 +45,7 @@ class WatchListService:
 class MovieUploadService:
     def __init__(self):
         self.movie_repo = MovieRepository()
-        self.fastapi_url = settings.FASTAPI_INTERNAL_URL.rstrip("/")
+        self.fastapi_url = settings.FASTAPI_INTERNAL_URL
 
     def process_movie(self, movie_id: int, input_url: str | None) -> dict:
         movie = self.movie_repo.get_by_id_internal(movie_id)
@@ -97,7 +97,7 @@ class MovieUploadService:
         if status == "completed":
             if not hls_url:
                 raise ValueError("hls_url is required for completed status")
-            if hls_url.startswith(settings.S3_INTERNAL_ENDPOINT.rstrip("/")):
+            if hls_url.startswith(settings.S3_INTERNAL_ENDPOINT):
                 raise ValueError("Internal S3 URL must not be saved")
             return self.movie_repo.finalize_movie(movie, hls_url)
 

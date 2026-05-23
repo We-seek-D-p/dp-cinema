@@ -120,7 +120,7 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
             )
 
 
-class MovieCallbackController(APIView):
+class MovieProcessingCallbackController(APIView):
     permission_classes = [InternalTokenPermission]
 
     def post(self, request):
@@ -168,3 +168,18 @@ class MovieCallbackController(APIView):
             )
 
         return Response({"status": "success"}, status=200)
+
+
+class MovieExistsController(APIView):
+    permission_classes = [InternalTokenPermission]
+    movie_repo = MovieRepository()
+
+    def get(self, request, movie_id):
+        movie = self.movie_repo.get_by_id_internal(movie_id)
+        if not movie:
+            return Response(
+                {"error": "Movie not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        return Response({"id": movie.id, "status": "exists"}, status=status.HTTP_200_OK)

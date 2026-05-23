@@ -74,7 +74,9 @@ def notify_django(
     hls_url: str | None = None,
     error: str | None = None,
 ):
-    django_url = f"{settings.DJANGO_INTERNAL_URL}/api/v1/internal/movies/callback/"
+    django_url = (
+        f"{settings.DJANGO_INTERNAL_URL}/api/v1/internal/movies/processing/callback/"
+    )
 
     payload = {"movie_id": movie_id, "status": status}
     if hls_url:
