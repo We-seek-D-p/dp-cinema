@@ -16,7 +16,7 @@ class Settings(BaseSettings):
         """Для совместимости со старым кодом возвращает INTERNAL endpoint"""
         return self.S3_INTERNAL_ENDPOINT
 
-    DJANGO_API_URL: str = "http://localhost:8000"
+    DJANGO_INTERNAL_URL: str = "http://localhost:8000"
     FASTAPI_SERVICE_URL: str = "http://localhost:8001"
     INTERNAL_SERVICE_TOKEN: str
 
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
         "S3_ACCESS_KEY",
         "S3_SECRET_KEY",
         "S3_BUCKET",
-        "DJANGO_API_URL",
+        "DJANGO_INTERNAL_URL",
         "INTERNAL_SERVICE_TOKEN",
     )
     @classmethod
@@ -39,6 +39,15 @@ class Settings(BaseSettings):
         if not v or not v.strip():
             raise ValueError(f"Field cannot be empty: {info.field_name}")
         return v
+
+    @field_validator(
+        "S3_INTERNAL_ENDPOINT",
+        "S3_PUBLIC_ENDPOINT",
+        "DJANGO_INTERNAL_URL",
+    )
+    @classmethod
+    def normalize_url_fields(cls, v: str) -> str:
+        return v.strip().rstrip("/")
 
 
 settings = Settings()

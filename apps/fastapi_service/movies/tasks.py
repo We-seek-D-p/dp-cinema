@@ -60,8 +60,8 @@ def get_video_meta(source_url: str):
 
 
 def normalize_source_url(source_url: str) -> str:
-    public_endpoint = settings.S3_PUBLIC_ENDPOINT.rstrip("/")
-    internal_endpoint = settings.S3_INTERNAL_ENDPOINT.rstrip("/")
+    public_endpoint = settings.S3_PUBLIC_ENDPOINT
+    internal_endpoint = settings.S3_INTERNAL_ENDPOINT
 
     if source_url.startswith(public_endpoint):
         return source_url.replace(public_endpoint, internal_endpoint, 1)
@@ -74,7 +74,7 @@ def notify_django(
     hls_url: str | None = None,
     error: str | None = None,
 ):
-    django_url = f"{settings.DJANGO_API_URL}/api/v1/movies/callback/"
+    django_url = f"{settings.DJANGO_INTERNAL_URL}/api/v1/internal/movies/callback/"
 
     payload = {"movie_id": movie_id, "status": status}
     if hls_url:
