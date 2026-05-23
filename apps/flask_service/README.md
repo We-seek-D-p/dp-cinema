@@ -22,12 +22,12 @@
       репозиторий, что этот юзер еще не оставлял отзыв на данный фильм.
     - **DB**: Отзыв сохраняется в PostgreSQL со статусом `pending`.
     - **Moderation**: Сервис вызывает внутренний метод `_notify_moderation`, отправляя `review_id` и контент в Django
-      API (`/api/v1/reviews/moderation/`) для отображения в админке.
+      API (`/api/v1/internal/reviews/moderation/`) для отображения в админке.
 
 2. **Модерация (PATCH)**:
     - Модератор в Django Admin одобряет отзыв.
     - **Callback**: Django-сервис отправляет `PATCH` запрос на внутреннюю ручку Flask
-      `/api/v1/reviews/internal/<id>/status`.
+      `/api/v1/internal/reviews/<id>/status`.
     - **Security**: Flask проверяет `X-Internal-Token` из заголовков (сверка со значением в `.env`).
     - **Service**: Вызывается `change_review_status`, который переводит отзыв в новый статус.
 
@@ -40,4 +40,3 @@
       модерацию в Django.
     - При `DELETE` выполняется **Soft Delete** — в БД заполняется поле `deleted_at`, запись перестает быть доступной для
       публичных ручек, но сохраняется в базе.
-

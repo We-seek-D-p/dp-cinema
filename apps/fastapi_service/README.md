@@ -7,7 +7,7 @@
 
 Проект реализован по схеме API + Service + Worker:
 
-- **API Layer (`api/v1`)**: Внутренний эндпоинт `POST /api/v1/movies/process/`, проверка `X-Internal-Token` и
+- **API Layer (`api/v1`)**: Внутренний эндпоинт `POST /api/v1/internal/movies/process/`, проверка `X-Internal-Token` и
   валидация входных данных
 - **Service Layer (`movies/services.py`)**: Создание `UUID7` task id и постановка задачи `process_video_task` в Celery
 - **Queue Layer (`core/celery_app.py`)**: Celery использует Redis как broker и backend
@@ -24,7 +24,7 @@
 2. **Запуск обработки из Django Admin**:
     - Администратор выбирает фильм и запускает action `Запустить обработку видео`
     - Django вызывает `MovieUploadService.process_movie`, переводит фильм в статус `queued` и отправляет запрос в
-      FastAPI на `POST /api/v1/movies/process/`
+      FastAPI на `POST /api/v1/internal/movies/process/`
     - В запросе передаются `movie_id` и `source_url`, а в заголовке `X-Internal-Token` передается внутренний токен
 
 3. **Прием запроса в FastAPI**:
@@ -33,8 +33,6 @@
     - FastAPI сразу возвращает Django ответ `202 Accepted` со статусом `accepted` и `task_id`
 
 4. **Обработка в Celery worker**:
-    - Worker заменяет публичный MinIO endpoint `http://localhost:9000` на внутренний Docker endpoint
-      `http://minio:9000`, чтобы контейнер мог прочитать файл
     - Worker отправляет callback в Django со статусом `processing`
     - `ffprobe` читает метаданные исходного файла: ширину, высоту и bitrate
     - По высоте исходника выбираются доступные профили качества: `144p`, `240p`, `360p`, `480p`, `720p`, `1080p`.
@@ -48,7 +46,7 @@
     - Итоговый URL получает формат `http://localhost:9000/movies/<movie_id>/master.m3u8`
 
 6. **Callback в Django**:
-    - При успехе worker отправляет callback в Django на `POST /api/v1/movies/callback/` со статусом `completed` и
+    - При успехе worker отправляет callback в Django на `POST /api/v1/internal/movies/processing/callback/` со статусом `completed` и
       итоговым `hls_url`
     - Django сохраняет `hls_url`, переводит фильм в статус `ready` и выставляет `is_published = True`
     - При ошибке worker отправляет статус `failed`, а Django сохраняет текст ошибки в `processing_error`и оставляет

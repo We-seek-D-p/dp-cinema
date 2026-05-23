@@ -214,15 +214,14 @@ else:
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
 
-FASTAPI_INTERNAL_URL = _normalize_url(
-    os.environ.get("FASTAPI_INTERNAL_URL"), "http://localhost:8001"
-)
-FLASK_INTERNAL_URL = _normalize_url(
-    os.environ.get("FLASK_INTERNAL_URL"), "http://localhost:5001"
-)
+fastapi_internal_url_raw = os.environ.get("FASTAPI_INTERNAL_URL")
+flask_internal_url_raw = os.environ.get("FLASK_INTERNAL_URL")
 
-if IS_PROD and not FASTAPI_INTERNAL_URL:
+if IS_PROD and not fastapi_internal_url_raw:
     raise RuntimeError("FASTAPI_INTERNAL_URL must be set in production")
 
-if IS_PROD and not FLASK_INTERNAL_URL:
+if IS_PROD and not flask_internal_url_raw:
     raise RuntimeError("FLASK_INTERNAL_URL must be set in production")
+
+FASTAPI_INTERNAL_URL = _normalize_url(fastapi_internal_url_raw, "http://localhost:8001")
+FLASK_INTERNAL_URL = _normalize_url(flask_internal_url_raw, "http://localhost:5001")

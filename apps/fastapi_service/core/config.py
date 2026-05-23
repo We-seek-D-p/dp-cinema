@@ -17,7 +17,6 @@ class Settings(BaseSettings):
         return self.S3_INTERNAL_ENDPOINT
 
     DJANGO_INTERNAL_URL: str = "http://localhost:8000"
-    FASTAPI_SERVICE_URL: str = "http://localhost:8001"
     INTERNAL_SERVICE_TOKEN: str
 
     model_config = SettingsConfigDict(

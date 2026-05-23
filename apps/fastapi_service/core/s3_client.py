@@ -40,16 +40,6 @@ class S3Client:
         logger.info(f"Uploaded {s3_key}, public URL: {public_url}")
         return public_url
 
-    def get_presigned_url(self, s3_key: str, expires_in: int = 3600) -> str:
-        """Генерирует подписанный URL с ПУБЛИЧНЫМ эндпоинтом"""
-        url = self.client.generate_presigned_url(
-            "get_object",
-            Params={"Bucket": self.bucket_name, "Key": s3_key},
-            ExpiresIn=expires_in,
-        )
-        url = url.replace(self.internal_endpoint, self.public_endpoint)
-        return url
-
     def delete_file(self, s3_key: str) -> bool:
         """Удаляет файл из S3"""
         try:
