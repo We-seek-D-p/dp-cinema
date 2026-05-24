@@ -77,9 +77,9 @@ class ReviewService:
                     "status": "pending",
                 }
             )
-            _notify_moderation(review)
             db.session.commit()
             db.session.refresh(review)
+            _notify_moderation(review)
             return review
         except Exception:
             db.session.rollback()
