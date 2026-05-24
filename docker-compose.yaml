@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cinema_password}
       POSTGRES_DB: ${POSTGRES_DB:-cinema_db}
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - cinema-pg:/var/lib/postgresql
     healthcheck:
@@ -105,6 +105,29 @@ services:
     networks:
       - cinema-network
 
+  flask:
+    build:
+      context: ./apps/flask_service
+      dockerfile: Dockerfile
+    container_name: cinema-flask
+    working_dir: /app
+    env_file:
+      - ./.env
+    environment:
+      - SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://${POSTGRES_USER:-cinema_user}:${POSTGRES_PASSWORD:-cinema_password}@postgres-db:5432/${POSTGRES_DB:-cinema_db}
+      - DJANGO_INTERNAL_URL=${DJANGO_INTERNAL_URL:-http://django:8000}
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-change-me-internal-token-please-use-strong-password}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-django-insecure-change-me-in-production}
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      django:
+        condition: service_started
+    ports:
+      - "5001:5001"
+    networks:
+      - cinema-network
+
   fastapi:
     build:
       context: ./apps/fastapi_service
@@ -114,7 +137,7 @@ services:
     env_file:
       - ./.env
     environment:
-      - DJANGO_API_URL=${DJANGO_API_URL:-http://django:8000}
+      - DJANGO_INTERNAL_URL=${DJANGO_INTERNAL_URL:-http://django:8000}
       - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-change-me-internal-token-please-use-strong-password}
       - S3_INTERNAL_ENDPOINT=${S3_INTERNAL_ENDPOINT:-http://minio:9000}
       - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
@@ -141,7 +164,7 @@ services:
     env_file:
       - ./.env
     environment:
-      - DJANGO_API_URL=${DJANGO_API_URL:-http://django:8000}
+      - DJANGO_INTERNAL_URL=${DJANGO_INTERNAL_URL:-http://django:8000}
       - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-change-me-internal-token-please-use-strong-password}
       - S3_INTERNAL_ENDPOINT=${S3_INTERNAL_ENDPOINT:-http://minio:9000}
       - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
