@@ -8,4 +8,3 @@ venv
 .gitignore
 *.md
 .DS_Store
-*.sqlite3

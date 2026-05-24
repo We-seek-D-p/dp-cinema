@@ -13,9 +13,6 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 import sys
 from pathlib import Path
-from urllib.parse import urlparse
-
-from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -28,16 +25,6 @@ DJANGO_ENV = os.environ.get("DJANGO_ENV", "dev").strip().lower()
 
 IS_DEV = DJANGO_ENV == "dev"
 IS_PROD = DJANGO_ENV == "prod"
-
-BASE_ENV_FILE = BASE_DIR / ".env"
-PROFILE_ENV_FILE = BASE_DIR / f".env.{DJANGO_ENV}"
-
-if BASE_ENV_FILE.exists():
-    load_dotenv(BASE_ENV_FILE)
-
-if PROFILE_ENV_FILE.exists():
-    load_dotenv(PROFILE_ENV_FILE, override=True)
-
 
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
@@ -187,32 +174,9 @@ if not INTERNAL_SERVICE_TOKEN:
 S3_INTERNAL_ENDPOINT = _normalize_url(
     os.environ.get("S3_INTERNAL_ENDPOINT"), "http://minio:9000"
 )
-S3_PUBLIC_ENDPOINT = _normalize_url(
-    os.environ.get("S3_PUBLIC_ENDPOINT"), "http://localhost:9000"
-)
 
-if os.environ.get("USE_S3", "False") == "True":
-    AWS_ACCESS_KEY_ID = os.environ.get("S3_ACCESS_KEY", "minioadmin")
-    AWS_SECRET_ACCESS_KEY = os.environ.get("S3_SECRET_KEY", "minioadmin")
-    AWS_STORAGE_BUCKET_NAME = os.environ.get("S3_BUCKET", "movies")
-    AWS_S3_REGION_NAME = "us-east-1"
-
-    AWS_S3_ENDPOINT_URL = S3_INTERNAL_ENDPOINT
-
-    AWS_S3_USE_SSL = False
-    AWS_S3_SIGNATURE_VERSION = "s3v4"
-
-    if S3_PUBLIC_ENDPOINT:
-        parsed_public = urlparse(S3_PUBLIC_ENDPOINT)
-        s3_public_host = parsed_public.netloc or parsed_public.path
-        AWS_S3_CUSTOM_DOMAIN = f"{s3_public_host}/{AWS_STORAGE_BUCKET_NAME}"
-        MEDIA_URL = f"{S3_PUBLIC_ENDPOINT}/{AWS_STORAGE_BUCKET_NAME}/"
-
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-    STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
-else:
-    MEDIA_URL = "/media/"
-    MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 fastapi_internal_url_raw = os.environ.get("FASTAPI_INTERNAL_URL")
 flask_internal_url_raw = os.environ.get("FLASK_INTERNAL_URL")
