@@ -1,5 +1,5 @@
 from pydantic import ValidationInfo, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -18,10 +18,6 @@ class Settings(BaseSettings):
 
     DJANGO_INTERNAL_URL: str = "http://localhost:8000"
     INTERNAL_SERVICE_TOKEN: str
-
-    model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
-    )
 
     @field_validator(
         "REDIS_URL",
